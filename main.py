@@ -1,4 +1,4 @@
-# mkwiimmfi_status v1.0
+# mkwiimmfi_status v1.0.1
 # A Discord Bot (using the discord.py python library) that shows the current amount of people playing Mario Kart Wii
 # on the custom Wiimmfi servers.
 # Wiimmfi server website (from which the data is taken from): https://wiimmfi.de/stat?m=88
@@ -28,9 +28,9 @@ async def help(ctx):
     embed = discord.Embed(
         colour=discord.Colour.green())
     embed.set_author(name='Help : list of commands available')
-    embed.add_field(name='!status', value='Shows how many players are online, and in which game regions', inline=False)
-    embed.add_field(name='!help', value='Returns this help list', inline=False)
-    embed.add_field(name='!ping', value='Returns bot respond time in milliseconds', inline=False)
+    embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions', inline=False)
+    embed.add_field(name='mkw:help', value='Returns this help list', inline=False)
+    embed.add_field(name='mkw:ping', value='Returns bot respond time in milliseconds', inline=False)
     embed.add_field(name="Website the data is from:", value=" https://wiimmfi.de/stat?m=88", inline=False)
     await ctx.send(embed=embed)
 
