@@ -11,11 +11,13 @@ import json
 
 TOKEN = open("token.txt", "r").readline()
 CLIENT_ID = open("client_id.txt", "r").readline()
+PREFIX = "mkw:"
+
 STATUS_URL = "https://wiimmfi.de/stat?m=80"
 REGIONS_URL = "https://wiimmfi.de/reg-list"
 NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
-client = commands.Bot(command_prefix='m:')
+client = commands.Bot(command_prefix=PREFIX)
 
 
 @client.command()
@@ -42,10 +44,12 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 
-def get_sorted_table():
-    """Returns the table (DataFrame) of the number of players online from https://wiimmfi.de/stat?m=88, sorted alphabetically."""
+def get_regions_players_nb(sort=True):
+    """Returns the table (DataFrame) of the number of players online from https://wiimmfi.de/stat?m=88, sorted alphabetically if asked so."""
     table = pd.read_html(io=STATUS_URL, match="Mario Kart Wii: Regions")[0]
-    return table.sort_values(by=('Mario Kart Wii: Regions', 'Description'))
+    if sort:
+        return table.sort_values(by=('Mario Kart Wii: Regions', 'Description'))
+    return table
 
 
 def get_regions_list():
@@ -58,7 +62,7 @@ def get_regions_list():
 @client.command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
-    table = get_sorted_table()
+    table = get_regions_players_nb(True)
     embed = discord.Embed(
         colour=discord.Colour.green())
     embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
@@ -76,7 +80,7 @@ async def invite(ctx):
 @tasks.loop(minutes=1)
 async def bot_activity():
     """Task updating the bot's activity with the total number of MKWii players online."""
-    table = get_sorted_table()
+    table = get_regions_players_nb()
     players_count = table.tail(1).iat[0, 1]
     activity = discord.Activity(name='%d people playing Mario Kart Wii online.' % players_count,
                                 type=discord.ActivityType.watching)
@@ -84,47 +88,23 @@ async def bot_activity():
 
 
 @client.command(name='subscribe', aliases=['sub'])
-@commands.has_permissions(manage_channels=True)
-async def subscribe(ctx, region):
+async def subscribe(ctx, *args):
     """"""
-    if get_regions_list().isin([region]).any():
-        try:
-            with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-                try:
-                    notification_subscribers_dict = json.load(notification_subscribers_json)
-                    print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
-                except json.JSONDecodeError:
-                    # await ctx.send("I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
-                    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
-                        json.dump({}, new_file)
-        except FileNotFoundError:
-            await ctx.send("Oops, i had to create my database, please try the command again.")
-            with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
-                json.dump({}, new_file)
-
+    channel_mode = len(args) == 2 and args[0] == "channel"
+    if channel_mode:
+        if ctx.author.permissions_in(ctx.channel).manage_channels:
+            region = args[1]
+            addressee = "This channel"
         else:
-            channel_id = str(ctx.message.channel.id)
-            if channel_id in notification_subscribers_dict:
-                if region in notification_subscribers_dict[channel_id]:
-                    await ctx.send("This channel has already subscribed to be notified for this region.")
-                    return
-                else:
-                    notification_subscribers_dict[channel_id].append(region)
-                print("Le salon est dans le dico !")
-            else:
-                notification_subscribers_dict[channel_id] = [region]
-
-            with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                json.dump(notification_subscribers_dict, notification_subscribers_json)
-            await ctx.send("This channel will now be notified when a player will join the first new room in this region or when the last player in this region will left.")
-            print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
-
+            await ctx.send("You have not the right to manage this channel.")
+            return
+    elif len(args) == 1:
+        region = args[0]
+        addressee = "You"
     else:
-        await ctx.send("The region ID " + str(region) + " does not exist. You can check the regions IDs there " + REGIONS_URL + ".")
+        await ctx.send("Error. Usage of sub command: " + PREFIX + "sub REGION_ID or " + PREFIX + "sub channel REGION_ID")
+        return
 
-@client.command()
-async def subscribe_dm(ctx, region):
-    """"""
     if get_regions_list().isin([region]).any():
         try:
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
@@ -141,11 +121,15 @@ async def subscribe_dm(ctx, region):
                 json.dump({}, new_file)
 
         else:
-            await ctx.message.author.send("Hello! You requested to be notified for the region " + region + ".")
-            channel_id = str(ctx.message.author.dm_channel.id)
+            if channel_mode:
+                channel_id = str(ctx.channel.id)
+            else:
+                await ctx.message.author.send("Hello! You requested to be notified for the region " + region + ".")
+                channel_id = str(ctx.author.dm_channel.id)
+
             if channel_id in notification_subscribers_dict:
                 if region in notification_subscribers_dict[channel_id]:
-                    await ctx.send("You have already subscribed to be notified for this region.")
+                    await ctx.send(addressee + " already subscribed to be notified for this region.")
                     return
                 else:
                     notification_subscribers_dict[channel_id].append(region)
@@ -155,7 +139,7 @@ async def subscribe_dm(ctx, region):
 
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
                 json.dump(notification_subscribers_dict, notification_subscribers_json)
-            await ctx.send("You will now be notified in DM when a player will join the first new room in this region or when the last player in this region will left.")
+            await ctx.send(addressee + " will now be notified when a player will join the first new room in this region or when the last player in this region will left.")
             print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
     else:
