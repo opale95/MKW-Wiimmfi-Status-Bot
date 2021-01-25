@@ -44,7 +44,7 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 
-def get_regions_players_nb(sort=True):
+def get_regions_players_nb(sort=False):
     """Returns the table (DataFrame) of the number of players online from https://wiimmfi.de/stat?m=88, sorted alphabetically if asked so."""
     table = pd.read_html(io=STATUS_URL, match="Mario Kart Wii: Regions")[0]
     if sort:
@@ -80,7 +80,7 @@ async def invite(ctx):
 @tasks.loop(minutes=1)
 async def bot_activity():
     """Task updating the bot's activity with the total number of MKWii players online."""
-    table = get_regions_players_nb()
+    table = get_regions_players_nb(True)
     players_count = table.tail(1).iat[0, 1]
     activity = discord.Activity(name='%d people playing Mario Kart Wii online.' % players_count,
                                 type=discord.ActivityType.watching)
@@ -90,13 +90,13 @@ async def bot_activity():
 @client.command(name='subscribe', aliases=['sub'])
 async def subscribe(ctx, *args):
     """"""
-    channel_mode = len(args) == 2 and args[0] == "channel"
-    if channel_mode:
+    text_channel = len(args) == 2 and args[0] == "channel"
+    if text_channel:
         if ctx.author.permissions_in(ctx.channel).manage_channels:
             region = args[1]
             addressee = "This channel"
         else:
-            await ctx.send("You have not the right to manage this channel.")
+            await ctx.send("You have not the right to manage this channel. You can subscribe to be notified in Direct Message with the " + PREFIX + "sub REGION_ID command.")
             return
     elif len(args) == 1:
         region = args[0]
@@ -121,7 +121,7 @@ async def subscribe(ctx, *args):
                 json.dump({}, new_file)
 
         else:
-            if channel_mode:
+            if text_channel:
                 channel_id = str(ctx.channel.id)
             else:
                 await ctx.message.author.send("Hello! You requested to be notified for the region " + region + ".")
@@ -129,7 +129,7 @@ async def subscribe(ctx, *args):
 
             if channel_id in notification_subscribers_dict:
                 if region in notification_subscribers_dict[channel_id]:
-                    await ctx.send(addressee + " already subscribed to be notified for this region.")
+                    await ctx.send(addressee + " already subscribed to be notified for the region " + region + ".")
                     return
                 else:
                     notification_subscribers_dict[channel_id].append(region)
@@ -139,7 +139,7 @@ async def subscribe(ctx, *args):
 
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
                 json.dump(notification_subscribers_dict, notification_subscribers_json)
-            await ctx.send(addressee + " will now be notified when a player will join the first new room in this region or when the last player in this region will left.")
+            await ctx.send(addressee + " will now be notified when a player will join the first new room in region " + region + " or when the last player in this region will left.")
             print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
     else:
@@ -147,9 +147,25 @@ async def subscribe(ctx, *args):
 
 
 @client.command(name='unsubscribe', aliases=['unsub'])
-@commands.has_permissions(manage_channels=True)
-async def unsubscribe(ctx, region):
+async def unsubscribe(ctx, *args):
     """"""
+    text_channel = len(args) == 2 and args[0] == "channel"
+    if text_channel:
+        if ctx.author.permissions_in(ctx.channel).manage_channels:
+            region = args[1]
+            addressee = "This channel"
+        else:
+            await ctx.send(
+                "You have not the right to manage this channel. You can unsubscribe to be notified in Direct Message with the " + PREFIX + "unsub REGION_ID command.")
+            return
+    elif len(args) == 1:
+        region = args[0]
+        addressee = "You"
+    else:
+        await ctx.send(
+            "Error. Usage of unsub command: " + PREFIX + "unsub REGION_ID or " + PREFIX + "sub channel REGION_ID")
+        return
+
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             try:
@@ -162,55 +178,26 @@ async def unsubscribe(ctx, region):
         await ctx.send("I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
 
     else:
-        channel_id = str(ctx.message.channel.id)
+        if text_channel:
+            channel_id = str(ctx.channel.id)
+        else:
+            channel_id = str(ctx.author.dm_channel.id)
         if channel_id in notification_subscribers_dict:
             try:
                 notification_subscribers_dict[channel_id].remove(region)
             except ValueError:
-                await ctx.send("You were not subscribed to this region notifications")
+                await ctx.send(addressee + " did not subscribe to region " + region + " notifications.")
             else:
                 if not notification_subscribers_dict[channel_id]:
                     del notification_subscribers_dict[channel_id]
                 with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
                     json.dump(notification_subscribers_dict, notification_subscribers_json)
-                await ctx.send("Region " + region + " removed from your subscriptions.")
+                await ctx.send(addressee + " will no longer be notified for region " + region + ".")
         else:
-            await ctx.send("You will no longer receive notifications from region " + region + ".")
+            await ctx.send(addressee + " did not subscribe to any room notification.")
 
         print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
-
-@client.command()
-async def unsubscribe_dm(ctx, region):
-    """"""
-    try:
-        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-            try:
-                notification_subscribers_dict = json.load(notification_subscribers_json)
-                print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
-            except json.JSONDecodeError:
-                await ctx.send("I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
-                print("Problème de lecture du JSON, le fichier est inexistant ou vide ?")
-    except FileNotFoundError:
-        await ctx.send("I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
-
-    else:
-        channel_id = str(ctx.message.channel.id)
-        if channel_id in notification_subscribers_dict:
-            try:
-                notification_subscribers_dict[channel_id].remove(region)
-            except ValueError:
-                await ctx.send("You were not subscribed to this region notifications")
-            else:
-                if not notification_subscribers_dict[channel_id]:
-                    del notification_subscribers_dict[channel_id]
-                with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                    json.dump(notification_subscribers_dict, notification_subscribers_json)
-                await ctx.send("Region " + region + " removed from your subscriptions.")
-        else:
-            await ctx.send("You will no longer receive notifications from region " + region + ".")
-
-        print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
 @tasks.loop(seconds=10)
 async def notify():
