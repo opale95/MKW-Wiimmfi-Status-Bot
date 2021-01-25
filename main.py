@@ -182,7 +182,14 @@ async def unsubscribe(ctx, *args):
             channel_id = str(ctx.channel.id)
         else:
             channel_id = str(ctx.author.dm_channel.id)
-        if channel_id in notification_subscribers_dict:
+
+        if region == "all":
+            if notification_subscribers_dict.pop(channel_id, None):
+                await ctx.send(addressee + " will no longer receive any notification.")
+            else:
+                await ctx.send(addressee + " did not subscribe to any room notification.")
+                return
+        elif channel_id in notification_subscribers_dict:
             try:
                 notification_subscribers_dict[channel_id].remove(region)
             except ValueError:
@@ -190,11 +197,13 @@ async def unsubscribe(ctx, *args):
             else:
                 if not notification_subscribers_dict[channel_id]:
                     del notification_subscribers_dict[channel_id]
-                with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                    json.dump(notification_subscribers_dict, notification_subscribers_json)
                 await ctx.send(addressee + " will no longer be notified for region " + region + ".")
         else:
             await ctx.send(addressee + " did not subscribe to any room notification.")
+            return
+
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+            json.dump(notification_subscribers_dict, notification_subscribers_json)
 
         print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
@@ -202,6 +211,7 @@ async def unsubscribe(ctx, *args):
 @tasks.loop(seconds=10)
 async def notify():
     """"""
+
 
 
 @client.event
