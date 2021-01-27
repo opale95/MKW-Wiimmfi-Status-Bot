@@ -113,7 +113,7 @@ async def subscribe(ctx, *args):
         except (FileNotFoundError, json.JSONDecodeError):
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
                 json.dump({}, new_file)
-
+            notification_subscribers_dict = {}
         if text_channel:
             channel_id = str(ctx.channel.id)
         else:
@@ -211,7 +211,6 @@ async def unsubscribe(ctx, *args):
         print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
 
-# @tasks.loop(minutes=1)
 async def bot_activity(table):
     """Task updating the bot's activity with the total number of MKWii players online."""
     players_total = table.head(1).iat[0, 1]
@@ -220,16 +219,21 @@ async def bot_activity(table):
     await client.change_presence(activity=activity)
 
 
-async def notify(region, message):
+async def notify(region_desc, message):
     """"""
-    # embed = discord.Embed(
-    #     colour=discord.Colour.green())
-    # embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
-    #
-    # embed.add_field(name=row[1], value=row[2], inline=False)
-    # await ctx.send(embed=embed)
-
-    print("NOTIFY: " + message + " " + region.removeprefix("Players "))
+    region = region_desc.partition("region ")[2].partition(" (")[0]
+    # print("NOTIFY: " + message + " " + region_desc.removeprefix("Players "))
+    with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+        notification_subscribers_dict = json.load(notification_subscribers_json)
+    for channel_id in notification_subscribers_dict:
+        if region in notification_subscribers_dict[channel_id]:
+            embed = discord.Embed(colour=discord.Colour.green())
+            # embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
+            embed.add_field(name=message + " ", value=region_desc.removeprefix("Players "))
+            # await ctx.send(embed=embed)
+            await client.wait_until_ready()
+            channel = client.get_channel(int(channel_id))
+            await channel.send(embed=embed)
 
 
 @tasks.loop(seconds=10)
