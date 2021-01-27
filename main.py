@@ -1,4 +1,4 @@
-""" mkwiimmfi_status
+""" MKW Wiimmfi Status Bot
 A Discord Bot (using the discord.py python library) that shows the current amount of people playing Mario Kart Wii
 on the custom Wiimmfi servers.
 Wiimmfi server website (from which the data is taken from): https://wiimmfi.de/stat?m=88
@@ -108,42 +108,35 @@ async def subscribe(ctx, *args):
         region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
         try:
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-                try:
-                    notification_subscribers_dict = json.load(notification_subscribers_json)
-                    print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
-                except json.JSONDecodeError:
-                    # await ctx.send("I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
-                    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
-                        json.dump({}, new_file)
-        except FileNotFoundError:
-            await ctx.send("Oops, i had to create my database, please try the command again.")
+                notification_subscribers_dict = json.load(notification_subscribers_json)
+                print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
+        except (FileNotFoundError, json.JSONDecodeError):
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
                 json.dump({}, new_file)
 
+        if text_channel:
+            channel_id = str(ctx.channel.id)
         else:
-            if text_channel:
-                channel_id = str(ctx.channel.id)
-            else:
-                await ctx.message.author.send(
-                    "Hello! You requested to be notified for the region " + region_id + " (" + region_name + ").")
-                channel_id = str(ctx.author.dm_channel.id)
+            await ctx.message.author.send(
+                "Hello! You requested to be notified for the region " + region_id + " (" + region_name + ").")
+            channel_id = str(ctx.author.dm_channel.id)
 
-            if channel_id in notification_subscribers_dict:
-                if region_id in notification_subscribers_dict[channel_id]:
-                    await ctx.send(
-                        addressee + " already subscribed to be notified for the region " + region_id + " (" + region_name + ").")
-                    return
-                else:
-                    notification_subscribers_dict[channel_id].append(region_id)
-                print("Le salon est dans le dico !")
+        if channel_id in notification_subscribers_dict:
+            if region_id in notification_subscribers_dict[channel_id]:
+                await ctx.send(
+                    addressee + " already subscribed to be notified for the region " + region_id + " (" + region_name + ").")
+                return
             else:
-                notification_subscribers_dict[channel_id] = [region_id]
+                notification_subscribers_dict[channel_id].append(region_id)
+            print("Le salon est dans le dico !")
+        else:
+            notification_subscribers_dict[channel_id] = [region_id]
 
-            with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                json.dump(notification_subscribers_dict, notification_subscribers_json)
-            await ctx.send(
-                addressee + " will now be notified when a player will join the first new room in region " + region_id + " (" + region_name + ") or when the last player in this region will left.")
-            print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+            json.dump(notification_subscribers_dict, notification_subscribers_json)
+        await ctx.send(
+            addressee + " will now be notified when a player will join the first new room in region " + region_id + " (" + region_name + ") or when the last player in this region will left.")
+        print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
     else:
         await ctx.send("The region ID " + str(
