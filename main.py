@@ -20,10 +20,10 @@ NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
 player_count_dict = {}
 
-# intents = discord.Intents.none()
-# intents.members = True
-# intents.guilds = True
-client = commands.Bot(command_prefix=PREFIX)
+intents = discord.Intents.default()
+intents.members = True
+intents.guilds = True
+client = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 
 @client.command()
@@ -167,50 +167,45 @@ async def unsubscribe(ctx, *args):
 
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-            try:
-                notification_subscribers_dict = json.load(notification_subscribers_json)
-                print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
-            except json.JSONDecodeError:
-                await ctx.send(
-                    "I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
-                print("Problème de lecture du JSON, le fichier est inexistant ou vide ?")
-    except FileNotFoundError:
-        await ctx.send(
-            "I have problems using my database, please try again and if the error persists, contact the moderator or developer.")
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+            print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+        notification_subscribers_dict = {}
 
+    if text_channel:
+        channel_id = str(ctx.channel.id)
     else:
-        if text_channel:
-            channel_id = str(ctx.channel.id)
-        else:
-            await ctx.message.author.send("Hello! You requested to unsubscribe to " + region_id + " region.")
-            channel_id = str(ctx.author.id)
+        await ctx.message.author.send("Hello! You requested to unsubscribe to " + region_id + " region.")
+        channel_id = str(ctx.author.id)
 
-        if region_id == "all":
-            if notification_subscribers_dict.pop(channel_id, None):
-                await ctx.send(addressee + " will no longer receive any notification.")
-            else:
-                await ctx.send(addressee + " did not subscribe to any room notification.")
-                return
-        elif channel_id in notification_subscribers_dict:
-            try:
-                notification_subscribers_dict[channel_id].remove(region_id)
-            except ValueError:
-                await ctx.send(addressee + " did not subscribe to region " + region_id + " notifications.")
-            else:
-                regions_list = get_regions_list()
-                region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
-                if not notification_subscribers_dict[channel_id]:
-                    del notification_subscribers_dict[channel_id]
-                await ctx.send(
-                    addressee + " will no longer be notified for region " + region_id + " (" + region_name + ").")
+    if region_id == "all":
+        if notification_subscribers_dict.pop(channel_id, None):
+            await ctx.send(addressee + " will no longer receive any notification.")
         else:
             await ctx.send(addressee + " did not subscribe to any room notification.")
             return
+    elif channel_id in notification_subscribers_dict:
+        try:
+            notification_subscribers_dict[channel_id].remove(region_id)
+        except ValueError:
+            await ctx.send(addressee + " did not subscribe to region " + region_id + " notifications.")
+        else:
+            regions_list = get_regions_list()
+            region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
+            if not notification_subscribers_dict[channel_id]:
+                del notification_subscribers_dict[channel_id]
+            await ctx.send(
+                addressee + " will no longer be notified for region " + region_id + " (" + region_name + ").")
+    else:
+        await ctx.send(addressee + " did not subscribe to any room notification.")
+        return
 
-        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-            json.dump(notification_subscribers_dict, notification_subscribers_json)
+    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+        json.dump(notification_subscribers_dict, notification_subscribers_json)
 
-        print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
+    print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
 
 async def bot_activity(table):
@@ -225,13 +220,20 @@ async def notify(region_desc, message):
     """"""
     region = region_desc.partition("region ")[2].partition(" (")[0]
     print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "NOTIFY: " + message + " " + region_desc.removeprefix("Players "), sep="\n")
-    with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-        notification_subscribers_dict = json.load(notification_subscribers_json)
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+            print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+        notification_subscribers_dict = {}
+
     for addressee_id in notification_subscribers_dict:
         if region in notification_subscribers_dict[addressee_id]:
             embed = discord.Embed(colour=discord.Colour.green())
             embed.add_field(name=message + " ", value=region_desc.removeprefix("Players "))
-            await client.wait_until_ready()
+            # await client.wait_until_ready()
             addressee = client.get_user(int(addressee_id))
             if addressee is None:
                 addressee = client.get_channel(int(addressee_id))
