@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands, tasks
 import pandas as pd
 import json
+import datetime
 
 TOKEN = open("token.txt", "r").readline()
 CLIENT_ID = open("client_id.txt", "r").readline()
@@ -19,6 +20,9 @@ NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
 player_count_dict = {}
 
+# intents = discord.Intents.none()
+# intents.members = True
+# intents.guilds = True
 client = commands.Bot(command_prefix=PREFIX)
 
 
@@ -117,9 +121,7 @@ async def subscribe(ctx, *args):
         if text_channel:
             channel_id = str(ctx.channel.id)
         else:
-            await ctx.message.author.send(
-                "Hello! You requested to be notified for the region " + region_id + " (" + region_name + ").")
-            channel_id = str(ctx.author.dm_channel.id)
+            channel_id = str(ctx.author.id)
 
         if channel_id in notification_subscribers_dict:
             if region_id in notification_subscribers_dict[channel_id]:
@@ -181,7 +183,7 @@ async def unsubscribe(ctx, *args):
             channel_id = str(ctx.channel.id)
         else:
             await ctx.message.author.send("Hello! You requested to unsubscribe to " + region_id + " region.")
-            channel_id = str(ctx.author.dm_channel.id)
+            channel_id = str(ctx.author.id)
 
         if region_id == "all":
             if notification_subscribers_dict.pop(channel_id, None):
@@ -222,28 +224,28 @@ async def bot_activity(table):
 async def notify(region_desc, message):
     """"""
     region = region_desc.partition("region ")[2].partition(" (")[0]
-    # print("NOTIFY: " + message + " " + region_desc.removeprefix("Players "))
+    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "NOTIFY: " + message + " " + region_desc.removeprefix("Players "), sep="\n")
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
         notification_subscribers_dict = json.load(notification_subscribers_json)
-    for channel_id in notification_subscribers_dict:
-        if region in notification_subscribers_dict[channel_id]:
+    for addressee_id in notification_subscribers_dict:
+        if region in notification_subscribers_dict[addressee_id]:
             embed = discord.Embed(colour=discord.Colour.green())
-            # embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
             embed.add_field(name=message + " ", value=region_desc.removeprefix("Players "))
-            # await ctx.send(embed=embed)
             await client.wait_until_ready()
-            channel = client.get_channel(int(channel_id))
-            await channel.send(embed=embed)
+            addressee = client.get_user(int(addressee_id))
+            if addressee is None:
+                addressee = client.get_channel(int(addressee_id))
+            await addressee.send(embed=embed)
 
 
 @tasks.loop(seconds=10)
 async def check():
     """"""
-    print("CHECKING")
     table = get_player_count()
     await bot_activity(table)
 
     global player_count_dict
+    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "CHECKING", "PREVIOUS_PCD", player_count_dict, sep="\n")
 
     if len(player_count_dict) == 0:
         for row in table.itertuples():
@@ -258,17 +260,22 @@ async def check():
             prev_region_count = player_count_dict.get(region_name)
             if prev_region_count:
                 if prev_region_count == 1 and new_region_count > 1:
+                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "A game with " + str(new_region_count) + " players is going to start")
                 elif prev_region_count > 1 and new_region_count == 1:
+                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "The game is over, but someone is waiting for a new game")
                 del player_count_dict[region_name]
             else:
                 if new_region_count == 1:
+                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "Someone is waiting for a new game")
                 else:
+                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "A game with " + str(new_region_count) + " players is going to start")
             new_dict[region_name] = new_region_count
         for region_name in player_count_dict:
+            print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
             await notify(region_name, "The game is over, there is nobody left to play")
         player_count_dict.clear()
         player_count_dict = new_dict
@@ -277,7 +284,6 @@ async def check():
 @client.event
 async def on_ready():
     check.start()
-
 
 @client.event
 async def on_command_error(ctx, error):
