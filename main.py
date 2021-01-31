@@ -8,7 +8,6 @@ import discord
 from discord.ext import commands, tasks
 import pandas as pd
 import json
-import datetime
 
 TOKEN = open("token.txt", "r").readline()
 CLIENT_ID = open("client_id.txt", "r").readline()
@@ -131,7 +130,6 @@ async def subscribe(ctx, *args):
         try:
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
                 notification_subscribers_dict = json.load(notification_subscribers_json)
-                print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
         except (FileNotFoundError, json.JSONDecodeError):
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
                 json.dump({}, new_file)
@@ -148,7 +146,6 @@ async def subscribe(ctx, *args):
                 return
             else:
                 notification_subscribers_dict[subscriber_id].append(region_id)
-            print("Le salon est dans le dico !")
         else:
             notification_subscribers_dict[subscriber_id] = [region_id]
 
@@ -156,7 +153,6 @@ async def subscribe(ctx, *args):
             json.dump(notification_subscribers_dict, notification_subscribers_json)
         await ctx.send(
             addressee + " will now be notified when a player will join the first new room in region " + region_id + " (" + region_name + ") or when the last player in this region will left.")
-        print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
     else:
         await ctx.send("The region ID " + str(
@@ -186,7 +182,6 @@ async def unsubscribe(ctx, *args):
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             notification_subscribers_dict = json.load(notification_subscribers_json)
-            print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
     except (FileNotFoundError, json.JSONDecodeError):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
@@ -222,8 +217,6 @@ async def unsubscribe(ctx, *args):
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
         json.dump(notification_subscribers_dict, notification_subscribers_json)
 
-    print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
-
 
 @client.command(name='subscriptions', aliases=['subs'])
 async def subscriptions(ctx, *args):
@@ -246,7 +239,6 @@ async def subscriptions(ctx, *args):
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             notification_subscribers_dict = json.load(notification_subscribers_json)
-            print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
     except (FileNotFoundError, json.JSONDecodeError):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
@@ -280,11 +272,9 @@ async def bot_activity(table):
 async def notify(region_desc, message):
     """"""
     region = region_desc.partition("region ")[2].partition(" (")[0]
-    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "NOTIFY: " + message + " " + region_desc.removeprefix("Players "), sep="\n")
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             notification_subscribers_dict = json.load(notification_subscribers_json)
-            print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
     except (FileNotFoundError, json.JSONDecodeError):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
@@ -314,7 +304,6 @@ async def check():
     await bot_activity(table)
 
     global player_count_dict
-    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "CHECKING", "PREVIOUS_PCD", player_count_dict, sep="\n")
 
     if len(player_count_dict) == 0:
         for row in table.itertuples():
@@ -329,22 +318,17 @@ async def check():
             prev_region_count = player_count_dict.get(region_name)
             if prev_region_count:
                 if prev_region_count == 1 and new_region_count > 1:
-                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "A game with " + str(new_region_count) + " players is going to start")
                 elif prev_region_count > 1 and new_region_count == 1:
-                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "The game is over, but someone is waiting for a new game")
                 del player_count_dict[region_name]
             else:
                 if new_region_count == 1:
-                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "Someone is waiting for a new game")
                 else:
-                    print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
                     await notify(region_name, "A game with " + str(new_region_count) + " players is going to start")
             new_dict[region_name] = new_region_count
         for region_name in player_count_dict:
-            print(datetime.datetime.now().strftime("\n%H:%M:%S"), "BEFORE_NOTIFY", "PCD", player_count_dict, "ND", new_dict, sep="\n")
             await notify(region_name, "The game is over, there is nobody left to play")
         player_count_dict.clear()
         player_count_dict = new_dict
