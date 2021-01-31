@@ -38,14 +38,21 @@ client.remove_command('help')
 @client.command(pass_context=True)
 async def help(ctx):
     """Help command that returns an embedded list and details of commands, and some additional information."""
-    embed = discord.Embed(
-        colour=discord.Colour.green())
+    embed = discord.Embed(colour=discord.Colour.green())
     embed.set_author(name='Help : list of commands available')
-    embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions',
+    embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions.',
                     inline=False)
-    embed.add_field(name='mkw:help', value='Returns this help list', inline=False)
+    embed.add_field(name='mkw:region "MANY WORDS" or mkw:region WORD',
+                    value="Search regions ID's by giving one or several words\nExample: mkw:region \"Mario Kart Fusion\" or mkw:region fun", inline=False)
+    embed.add_field(name='mkw:sub REGION_ID or mkw:sub channel REGION_ID',
+                    value='Subscribe yourself to receive DM or the current channel (if you own the Manage Channels rights) to be notified to regions events.\nExample: mkw:sub 870 or mkw:sub channel 870', inline=False)
+    embed.add_field(name='mkw:unsub REGION_ID|all or mkw:unsub REGION_ID|all',
+                    value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to regions events notifications.\n'
+                          'Example: mkw:unsub all or mkw:unsub 870 or mkw:unsub channel all or mkw:unsub channel 870', inline=False)
+    embed.add_field(name='mkw:subs or mkw:subs channel', value='Returns the region list for which you or the current channel (if you own the Manage Channels rights) are subscribed to.', inline=False)
+    embed.add_field(name='mkw:invite', value='Returns a link to invite the bot in your server.', inline=False)
+    embed.add_field(name='mkw:help', value='Returns this help list.', inline=False)
     embed.add_field(name='mkw:ping', value='Returns bot response time in milliseconds', inline=False)
-    embed.add_field(name='mkw:invite', value='Returns a link to invite the bot in your server', inline=False)
     embed.add_field(name="Website the data is from:", value=" https://wiimmfi.de/stat?m=88", inline=False)
     embed.add_field(name="Want to report a bug, suggest a feature, or want to read/get the source code ?",
                     value="https://github.com/opale95/mkwiimmfi_status", inline=False)
@@ -86,6 +93,17 @@ async def invite(ctx):
     await ctx.send(
         "I'd be glad to join your server ! Invite me by clicking on this link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=248897")
 
+@client.command()
+async def region(ctx, search):
+    """Command to search regions ID's by name."""
+    regions_list = get_regions_list()
+    filtered_list = regions_list.loc[regions_list[2].str.contains(search, case=False)]
+    embed = discord.Embed(colour=discord.Colour.green())
+    embed.set_author(name="Region ID search")
+    for row in filtered_list.itertuples():
+        embed.add_field(name=row[2], value=row[1])
+    await ctx.send(embed=embed)
+
 
 @client.command(name='subscribe', aliases=['sub'])
 async def subscribe(ctx, *args):
@@ -119,20 +137,20 @@ async def subscribe(ctx, *args):
                 json.dump({}, new_file)
             notification_subscribers_dict = {}
         if text_channel:
-            channel_id = str(ctx.channel.id)
+            subscriber_id = str(ctx.channel.id)
         else:
-            channel_id = str(ctx.author.id)
+            subscriber_id = str(ctx.author.id)
 
-        if channel_id in notification_subscribers_dict:
-            if region_id in notification_subscribers_dict[channel_id]:
+        if subscriber_id in notification_subscribers_dict:
+            if region_id in notification_subscribers_dict[subscriber_id]:
                 await ctx.send(
                     addressee + " already subscribed to be notified for the region " + region_id + " (" + region_name + ").")
                 return
             else:
-                notification_subscribers_dict[channel_id].append(region_id)
+                notification_subscribers_dict[subscriber_id].append(region_id)
             print("Le salon est dans le dico !")
         else:
-            notification_subscribers_dict[channel_id] = [region_id]
+            notification_subscribers_dict[subscriber_id] = [region_id]
 
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
             json.dump(notification_subscribers_dict, notification_subscribers_json)
@@ -175,31 +193,30 @@ async def unsubscribe(ctx, *args):
         notification_subscribers_dict = {}
 
     if text_channel:
-        channel_id = str(ctx.channel.id)
+        subscriber_id = str(ctx.channel.id)
     else:
-        await ctx.message.author.send("Hello! You requested to unsubscribe to " + region_id + " region.")
-        channel_id = str(ctx.author.id)
+        subscriber_id = str(ctx.author.id)
 
     if region_id == "all":
-        if notification_subscribers_dict.pop(channel_id, None):
+        if notification_subscribers_dict.pop(subscriber_id, None):
             await ctx.send(addressee + " will no longer receive any notification.")
         else:
-            await ctx.send(addressee + " did not subscribe to any room notification.")
+            await ctx.send(addressee + " did not subscribe to any region notification.")
             return
-    elif channel_id in notification_subscribers_dict:
+    elif subscriber_id in notification_subscribers_dict:
         try:
-            notification_subscribers_dict[channel_id].remove(region_id)
+            notification_subscribers_dict[subscriber_id].remove(region_id)
         except ValueError:
             await ctx.send(addressee + " did not subscribe to region " + region_id + " notifications.")
         else:
             regions_list = get_regions_list()
             region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
-            if not notification_subscribers_dict[channel_id]:
-                del notification_subscribers_dict[channel_id]
+            if not notification_subscribers_dict[subscriber_id]:
+                del notification_subscribers_dict[subscriber_id]
             await ctx.send(
                 addressee + " will no longer be notified for region " + region_id + " (" + region_name + ").")
     else:
-        await ctx.send(addressee + " did not subscribe to any room notification.")
+        await ctx.send(addressee + " did not subscribe to any region notification.")
         return
 
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
@@ -208,8 +225,52 @@ async def unsubscribe(ctx, *args):
     print("Dictionnaire après modif. écrit dans le JSON: ", notification_subscribers_dict)
 
 
+@client.command(name='subscriptions', aliases=['subs'])
+async def subscriptions(ctx, *args):
+    """"""
+    text_channel = len(args) == 1 and args[0] == "channel"
+    if text_channel:
+        if ctx.author.permissions_in(ctx.channel).manage_channels:
+            addressee = "This channel"
+        else:
+            await ctx.send(
+                "You have not the right to manage this channel. You can subscribe to be notified in Direct Message with the " + PREFIX + "sub REGION_ID command.")
+            return
+    elif len(args) == 0:
+        addressee = "You"
+    else:
+        await ctx.send(
+            "Error. Usage of subs command: " + PREFIX + "subs or " + PREFIX + "subs channel")
+        return
+
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+            print("Dictionnaire lu depuis le JSON: ", notification_subscribers_dict)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+        notification_subscribers_dict = {}
+    if text_channel:
+        subscriber_id = str(ctx.channel.id)
+    else:
+        subscriber_id = str(ctx.author.id)
+
+    if subscriber_id in notification_subscribers_dict:
+        regions_list = get_regions_list()
+        embed = discord.Embed(colour=discord.Colour.green())
+        embed.set_author(name=addressee + " subscribed to:")
+        for region_id in notification_subscribers_dict[subscriber_id]:
+            region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
+            embed.add_field(name=region_id, value=region_name, inline=False)
+        await ctx.send(embed=embed)
+
+    else:
+        await ctx.send(addressee + " didn't subscribe to any region notifications.")
+
+
 async def bot_activity(table):
-    """Task updating the bot's activity with the total number of MKWii players online."""
+    """Updates the bot's activity with the total number of MKWii players online."""
     players_total = table.head(1).iat[0, 1]
     activity = discord.Activity(name='%d people playing Mario Kart Wii online.' % players_total,
                                 type=discord.ActivityType.watching)
@@ -231,7 +292,13 @@ async def notify(region_desc, message):
 
     for addressee_id in notification_subscribers_dict:
         if region in notification_subscribers_dict[addressee_id]:
-            embed = discord.Embed(colour=discord.Colour.green())
+            if "start" in message:
+                colour = discord.Colour.green()
+            elif "over" in message:
+                colour = discord.Colour.red()
+            else:
+                colour = discord.Colour.orange()
+            embed = discord.Embed(colour=colour)
             embed.add_field(name=message + " ", value=region_desc.removeprefix("Players "))
             # await client.wait_until_ready()
             addressee = client.get_user(int(addressee_id))
