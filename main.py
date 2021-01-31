@@ -54,7 +54,7 @@ async def help(ctx):
     embed.add_field(name='mkw:ping', value='Returns bot response time in milliseconds', inline=False)
     embed.add_field(name="Website the data is from:", value=" https://wiimmfi.de/stat?m=88", inline=False)
     embed.add_field(name="Want to report a bug, suggest a feature, or want to read/get the source code ?",
-                    value="https://github.com/opale95/mkwiimmfi_status", inline=False)
+                    value="https://github.com/opale95/MKW-Wiimmfi-Status-Bot", inline=False)
     await ctx.send(embed=embed)
 
 
