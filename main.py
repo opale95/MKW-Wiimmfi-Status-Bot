@@ -284,10 +284,10 @@ async def notify(region_desc, message):
         if region in notification_subscribers_dict[addressee_id]:
             if "start" in message:
                 colour = discord.Colour.green()
-            elif "over" in message:
-                colour = discord.Colour.red()
-            else:
+            elif "waiting" in message:
                 colour = discord.Colour.orange()
+            else:
+                colour = discord.Colour.red()
             embed = discord.Embed(colour=colour)
             embed.add_field(name=message + " ", value=region_desc.removeprefix("Players "))
             # await client.wait_until_ready()
