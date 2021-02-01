@@ -269,7 +269,7 @@ async def bot_activity(table):
     await client.change_presence(activity=activity)
 
 
-async def notify(region_desc, message_content, message_id=None):
+async def notify(region_desc, message_content, messages=None):
     """"""
     region_id = region_desc.partition("region ")[2].partition(" (")[0]
     try:
@@ -280,34 +280,34 @@ async def notify(region_desc, message_content, message_id=None):
             json.dump({}, new_file)
         notification_subscribers_dict = {}
 
-    for addressee_id in notification_subscribers_dict:
-        if region_id in notification_subscribers_dict[addressee_id]:
-            if "ongoing" in message_content:
-                colour = discord.Colour.green()
-            elif "waiting" in message_content:
-                colour = discord.Colour.orange()
-            else:
-                colour = discord.Colour.red()
-            embed = discord.Embed(colour=colour)
-            embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
-            # await client.wait_until_ready()
-            addressee = client.get_user(int(addressee_id))
-            if addressee is None:
-                addressee = client.get_channel(int(addressee_id))
-            if message_id:
-                try:
-                    message_object = await addressee.fetch_message(message_id)
-                except discord.NotFound as error:
-                    print("RESPONSE: ", error.response, "\nMESSAGE: ", error.text)
-                else:
-                    await message_object.edit(embed=embed)
-            else:
+    if "ongoing" in message_content:
+        colour = discord.Colour.green()
+    elif "waiting" in message_content:
+        colour = discord.Colour.orange()
+    else:
+        colour = discord.Colour.red()
+    embed = discord.Embed(colour=colour)
+    embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
+
+    if messages:
+        for message in messages:
+            await message.edit(embed=embed)
+
+    else:
+        messages = []
+        for addressee_id in notification_subscribers_dict:
+            if region_id in notification_subscribers_dict[addressee_id]:
+                # await client.wait_until_ready()
+                addressee = client.get_user(int(addressee_id))
+                if addressee is None:
+                    addressee = client.get_channel(int(addressee_id))
                 try:
                     message_object = await addressee.send(embed=embed)
                 except discord.Forbidden as error:
-                    print("RESPONSE: ", error.response, "\nMESSAGE: ", error.text)
-                    return None
-                return message_object.id
+                    print("Forbidden: ", error.text, "\nADRESSEE: ", addressee_id)
+                else:
+                    messages.append(message_object)
+    return messages
 
 
 # si prev
@@ -346,23 +346,23 @@ async def check():
 
             if data:
                 prev_region_count = data[0]
-                message_id = data[1]
+                messages = data[1]
                 if prev_region_count != new_region_count:
                     if new_region_count == 1:
                         # edit
-                        await notify(region_desc, "The game is over, but someone is waiting for a new game", message_id)
+                        await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
                     else:
                         # edit
-                        await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing", message_id)
+                        await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing", messages)
                 del player_count_dict[region_desc]
             else:
                 if new_region_count == 1:
                     # send
-                    message_id = await notify(region_desc, "Someone is waiting for a new game")
+                    messages = await notify(region_desc, "Someone is waiting for a new game")
                 else:
                     # send
-                    message_id = await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing")
-            new_dict[region_desc] = [new_region_count, message_id]
+                    messages = await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing")
+            new_dict[region_desc] = [new_region_count, messages]
         for region_desc in player_count_dict:
             # edit
             await notify(region_desc, "The game is over, there is nobody left to play", player_count_dict[region_desc][1])
