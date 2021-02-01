@@ -295,14 +295,18 @@ async def notify(region_desc, message_content, message_id=None):
             if addressee is None:
                 addressee = client.get_channel(int(addressee_id))
             if message_id:
-                message_object = await addressee.fetch_message(message_id)
-                await message_object.edit(embed=embed)
+                try:
+                    message_object = await addressee.fetch_message(message_id)
+                except discord.NotFound as error:
+                    print("RESPONSE: " + error.response + "\nMESSAGE: " + error.message)
+                else:
+                    await message_object.edit(embed=embed)
             else:
                 try:
                     message_object = await addressee.send(embed=embed)
                 except discord.Forbidden as error:
                     print("RESPONSE: " + error.response + "\nMESSAGE: " + error.message)
-                    message_object = None
+                    return None
                 return message_object.id
 
 
