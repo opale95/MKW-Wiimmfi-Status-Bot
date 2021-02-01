@@ -269,9 +269,9 @@ async def bot_activity(table):
     await client.change_presence(activity=activity)
 
 
-async def notify(region_desc, message):
+async def notify(region_desc, message_content, message_id=None):
     """"""
-    region = region_desc.partition("region ")[2].partition(" (")[0]
+    region_id = region_desc.partition("region ")[2].partition(" (")[0]
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             notification_subscribers_dict = json.load(notification_subscribers_json)
@@ -281,20 +281,43 @@ async def notify(region_desc, message):
         notification_subscribers_dict = {}
 
     for addressee_id in notification_subscribers_dict:
-        if region in notification_subscribers_dict[addressee_id]:
-            if "start" in message:
+        if region_id in notification_subscribers_dict[addressee_id]:
+            if "ongoing" in message_content:
                 colour = discord.Colour.green()
-            elif "waiting" in message:
+            elif "waiting" in message_content:
                 colour = discord.Colour.orange()
             else:
                 colour = discord.Colour.red()
             embed = discord.Embed(colour=colour)
-            embed.add_field(name=message + " ", value=region_desc.removeprefix("Players "))
+            embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
             # await client.wait_until_ready()
             addressee = client.get_user(int(addressee_id))
             if addressee is None:
                 addressee = client.get_channel(int(addressee_id))
-            await addressee.send(embed=embed)
+            if message_id:
+                message_object = await addressee.fetch_message(message_id)
+                await message_object.edit(embed=embed)
+            else:
+                try:
+                    message_object = await addressee.send(embed=embed)
+                except discord.Forbidden as error:
+                    print("RESPONSE: " + error.response + "\nMESSAGE: " + error.message)
+                    message_object = None
+                return message_object.id
+
+
+# si prev
+    # si prev != new:
+        # si new == 1
+            # notify(edit,qqun attend)
+        # sinon
+            # notify(edit)
+# sinon
+    # si new == 1
+        # notify(send, qqun attend)
+    # sinon
+        # notify(send) (+ sauvegarder id message)
+# regions restantes : notify(edit) (et suppr id)
 
 
 @tasks.loop(seconds=10)
@@ -307,29 +330,38 @@ async def check():
 
     if len(player_count_dict) == 0:
         for row in table.itertuples():
-            player_count_dict[row[1]] = row[2]
+            player_count_dict[row[1]] = [row[2], None]
 
     else:
         new_dict = {}
 
         for row in table.itertuples():
-            region_name = row[1]
+            region_desc = row[1]
             new_region_count = row[2]
-            prev_region_count = player_count_dict.get(region_name)
-            if prev_region_count:
-                if prev_region_count == 1 and new_region_count > 1:
-                    await notify(region_name, "A game with " + str(new_region_count) + " players is going to start")
-                elif prev_region_count > 1 and new_region_count == 1:
-                    await notify(region_name, "The game is over, but someone is waiting for a new game")
-                del player_count_dict[region_name]
+            data = player_count_dict.get(region_desc)
+
+            if data:
+                prev_region_count = data[0]
+                message_id = data[1]
+                if prev_region_count != new_region_count:
+                    if new_region_count == 1:
+                        # edit
+                        await notify(region_desc, "The game is over, but someone is waiting for a new game", message_id)
+                    else:
+                        # edit
+                        await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing", message_id)
+                del player_count_dict[region_desc]
             else:
                 if new_region_count == 1:
-                    await notify(region_name, "Someone is waiting for a new game")
+                    # send
+                    message_id = await notify(region_desc, "Someone is waiting for a new game")
                 else:
-                    await notify(region_name, "A game with " + str(new_region_count) + " players is going to start")
-            new_dict[region_name] = new_region_count
-        for region_name in player_count_dict:
-            await notify(region_name, "The game is over, there is nobody left to play")
+                    # send
+                    message_id = await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing")
+            new_dict[region_desc] = [new_region_count, message_id]
+        for region_desc in player_count_dict:
+            # edit
+            await notify(region_desc, "The game is over, there is nobody left to play", player_count_dict[region_desc][1])
         player_count_dict.clear()
         player_count_dict = new_dict
 
