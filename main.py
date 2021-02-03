@@ -152,11 +152,11 @@ async def subscribe(ctx, *args):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
             json.dump(notification_subscribers_dict, notification_subscribers_json)
         await ctx.send(
-            addressee + " will now be notified when a player will join the first new room in region " + region_id + " (" + region_name + ") or when the last player in this region will left.")
+            addressee + " will now be notified when players will connect to region " + region_id + " (" + region_name + ").")
 
     else:
         await ctx.send("The region ID " + str(
-            region_id) + " does not exist. You can check the regions IDs there " + REGIONS_URL + ".")
+            region_id) + " does not exist. You can search regions IDs with ```mkw:region \"words to search\"``` or ```mkw:region word_to_search```")
 
 
 @client.command(name='unsubscribe', aliases=['unsub'])
@@ -227,7 +227,7 @@ async def subscriptions(ctx, *args):
             addressee = "This channel"
         else:
             await ctx.send(
-                "You have not the right to manage this channel. You can subscribe to be notified in Direct Message with the " + PREFIX + "sub REGION_ID command.")
+                "You have not the right to manage this channel. You can subscribe to be notified by Direct Message with the " + PREFIX + "sub REGION_ID command.")
             return
     elif len(args) == 0:
         addressee = "You"
@@ -280,7 +280,7 @@ async def notify(region_desc, message_content, messages=None):
             json.dump({}, new_file)
         notification_subscribers_dict = {}
 
-    if "ongoing" in message_content:
+    if "players" in message_content:
         colour = discord.Colour.green()
     elif "waiting" in message_content:
         colour = discord.Colour.orange()
@@ -289,12 +289,11 @@ async def notify(region_desc, message_content, messages=None):
     embed = discord.Embed(colour=colour)
     embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
 
-    if messages:
+    if len(messages) != 0:
         for message in messages:
             await message.edit(embed=embed)
 
     else:
-        messages = []
         for addressee_id in notification_subscribers_dict:
             if region_id in notification_subscribers_dict[addressee_id]:
                 # await client.wait_until_ready()
@@ -307,21 +306,6 @@ async def notify(region_desc, message_content, messages=None):
                     print("Forbidden: ", error.text, "\nADRESSEE: ", addressee_id)
                 else:
                     messages.append(message_object)
-    return messages
-
-
-# si prev
-    # si prev != new:
-        # si new == 1
-            # notify(edit,qqun attend)
-        # sinon
-            # notify(edit)
-# sinon
-    # si new == 1
-        # notify(send, qqun attend)
-    # sinon
-        # notify(send) (+ sauvegarder id message)
-# regions restantes : notify(edit) (et suppr id)
 
 
 @tasks.loop(seconds=10)
@@ -332,42 +316,39 @@ async def check():
 
     global player_count_dict
 
-    if len(player_count_dict) == 0:
-        for row in table.itertuples():
-            player_count_dict[row[1]] = [row[2], None]
+    # if len(player_count_dict) == 0:
+    #     for row in table.itertuples():
+    #         player_count_dict[row[1]] = [row[2], []]
 
-    else:
-        new_dict = {}
+    # else:
+    new_dict = {}
 
-        for row in table.itertuples():
-            region_desc = row[1]
-            new_region_count = row[2]
-            data = player_count_dict.get(region_desc)
+    for row in table.itertuples():
+        region_desc = row[1]
+        new_region_count = row[2]
+        data = player_count_dict.get(region_desc)
 
-            if data:
-                prev_region_count = data[0]
-                messages = data[1]
-                if prev_region_count != new_region_count:
-                    if new_region_count == 1:
-                        # edit
-                        await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
-                    else:
-                        # edit
-                        await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing", messages)
-                del player_count_dict[region_desc]
-            else:
+        if data:
+            prev_region_count = data[0]
+            messages = data[1]
+            if prev_region_count != new_region_count:
                 if new_region_count == 1:
-                    # send
-                    messages = await notify(region_desc, "Someone is waiting for a new game")
+                    await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
                 else:
-                    # send
-                    messages = await notify(region_desc, "A game with " + str(new_region_count) + " players is ongoing")
-            new_dict[region_desc] = [new_region_count, messages]
-        for region_desc in player_count_dict:
-            # edit
-            await notify(region_desc, "The game is over, there is nobody left to play", player_count_dict[region_desc][1])
-        player_count_dict.clear()
-        player_count_dict = new_dict
+                    await notify(region_desc, str(new_region_count) + " players", messages)
+            del player_count_dict[region_desc]
+        else:
+            messages = []
+            if new_region_count == 1:
+                await notify(region_desc, "Someone is waiting for a new game", messages)
+            else:
+                await notify(region_desc, str(new_region_count) + " players", messages)
+        new_dict[region_desc] = [new_region_count, messages]
+    for region_desc in player_count_dict:
+        # edit
+        await notify(region_desc, "The game is over, there is nobody left to play", player_count_dict[region_desc][1])
+    player_count_dict.clear()
+    player_count_dict = new_dict
 
 
 @client.event
