@@ -289,21 +289,30 @@ async def notify(region_desc, message_content, messages=None):
     embed = discord.Embed(colour=colour)
     embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
 
+    messages_channel_id = []
     if len(messages) != 0:
         for message in messages:
+            messages_channel_id.append(message.channel.id)
             await message.edit(embed=embed)
 
-    else:
-        for addressee_id in notification_subscribers_dict:
-            if region_id in notification_subscribers_dict[addressee_id]:
-                # await client.wait_until_ready()
-                addressee = client.get_user(int(addressee_id))
-                if addressee is None:
-                    addressee = client.get_channel(int(addressee_id))
+    for recipient_id in notification_subscribers_dict:
+        if region_id in notification_subscribers_dict[recipient_id]:
+            # await client.wait_until_ready()
+            recipient = client.get_user(int(recipient_id))
+            if recipient is None:
+                recipient = client.get_channel(int(recipient_id))
+                channel_id = recipient.id
+            else:
+                dm_channel = recipient.dm_channel
+                if dm_channel:
+                    channel_id = recipient.dm_channel.id
+                else:
+                    channel_id = None
+            if channel_id not in messages_channel_id:
                 try:
-                    message_object = await addressee.send(embed=embed)
+                    message_object = await recipient.send(embed=embed)
                 except discord.Forbidden as error:
-                    print("Forbidden: ", error.text, "\nADRESSEE: ", addressee_id)
+                    print("Forbidden: ", error.text, "\nADRESSEE: ", recipient_id)
                 else:
                     messages.append(message_object)
 
