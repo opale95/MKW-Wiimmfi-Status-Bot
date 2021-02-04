@@ -14,7 +14,8 @@ CLIENT_ID = open("client_id.txt", "r").readline()
 PREFIX = "mkw:"
 
 STATUS_URL = "https://wiimmfi.de/stat?m=80"
-REGIONS_URL = "https://wiimmfi.de/reg-list"
+REGIONS_URL = "https://wiimmfi.de/reg-stat"
+CUSTOM_REGIONS_URL = "https://wiimmfi.de/reg-list"
 NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
 player_count_dict = {}
@@ -69,10 +70,18 @@ def get_player_count(sort=False):
 
 def get_regions_list():
     """"""
-    regions = pd.read_html(io=REGIONS_URL, match="Name of region")[0]
-    regions.drop(regions[regions[0] == "Region"].index, inplace=True)
-    return regions[[0, 2]]
 
+    regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
+    regions = regions.iloc[1:8, [0, 3]]
+    regions.columns = ["ID", "Name"]
+    regions = regions.astype(str)
+
+    custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
+    custom.drop(custom[custom[0] == "Region"].index, inplace=True)
+    custom = custom[[0, 2]]
+    custom.columns = ["ID", "Name"]
+
+    return regions.append(custom)
 
 @client.command()
 async def status(ctx):
@@ -96,11 +105,17 @@ async def invite(ctx):
 async def region(ctx, search):
     """Command to search regions ID's by name."""
     regions_list = get_regions_list()
-    filtered_list = regions_list.loc[regions_list[2].str.contains(search, case=False)]
+    filtered_list = regions_list.loc[regions_list["Name"].str.contains(search, case=False)]
+
     embed = discord.Embed(colour=discord.Colour.green())
     embed.set_author(name="Region ID search")
-    for row in filtered_list.itertuples():
-        embed.add_field(name=row[2], value=row[1])
+
+    if filtered_list.empty:
+        embed.colour = discord.Colour.red()
+        embed.add_field(name="No result", value="Regions list: https://wiimmfi.de/reg-stat or https://wiimmfi.de/reg-list")
+    else:
+        for row in filtered_list.itertuples():
+            embed.add_field(name=row[2], value=row[1])
     await ctx.send(embed=embed)
 
 
@@ -125,8 +140,8 @@ async def subscribe(ctx, *args):
         return
 
     regions_list = get_regions_list()
-    if regions_list[0].isin([region_id]).any():
-        region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
+    if regions_list["ID"].isin([region_id]).any():
+        region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
         try:
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
                 notification_subscribers_dict = json.load(notification_subscribers_json)
@@ -205,7 +220,7 @@ async def unsubscribe(ctx, *args):
             await ctx.send(addressee + " did not subscribe to region " + region_id + " notifications.")
         else:
             regions_list = get_regions_list()
-            region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
+            region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             if not notification_subscribers_dict[subscriber_id]:
                 del notification_subscribers_dict[subscriber_id]
             await ctx.send(
@@ -253,7 +268,7 @@ async def subscriptions(ctx, *args):
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=addressee + " subscribed to:")
         for region_id in notification_subscribers_dict[subscriber_id]:
-            region_name = regions_list.loc[regions_list[0] == region_id][2].values[0]
+            region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             embed.add_field(name=region_id, value=region_name, inline=False)
         await ctx.send(embed=embed)
 
