@@ -284,7 +284,7 @@ async def bot_activity(table):
     await client.change_presence(activity=activity)
 
 
-async def notify(region_desc, message_content, messages=None):
+async def notify(region_desc, message_content, messages):
     """"""
     region_id = region_desc.partition("region ")[2].partition(" (")[0]
     try:
@@ -295,12 +295,12 @@ async def notify(region_desc, message_content, messages=None):
             json.dump({}, new_file)
         notification_subscribers_dict = {}
 
-    if "players" in message_content:
-        colour = discord.Colour.green()
+    if "over" in message_content:
+        colour = discord.Colour.red()
     elif "waiting" in message_content:
         colour = discord.Colour.orange()
     else:
-        colour = discord.Colour.red()
+        colour = discord.Colour.green()
     embed = discord.Embed(colour=colour)
     embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
 
@@ -355,22 +355,26 @@ async def check():
         if data:
             prev_region_count = data[0]
             messages = data[1]
+            max_region_count = data[2]
             if prev_region_count != new_region_count:
+                if new_region_count > prev_region_count:
+                    max_region_count = new_region_count
                 if new_region_count == 1:
                     await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
                 else:
                     await notify(region_desc, str(new_region_count) + " players", messages)
             del player_count_dict[region_desc]
         else:
+            max_region_count = new_region_count
             messages = []
             if new_region_count == 1:
                 await notify(region_desc, "Someone is waiting for a new game", messages)
             else:
                 await notify(region_desc, str(new_region_count) + " players", messages)
-        new_dict[region_desc] = [new_region_count, messages]
+        new_dict[region_desc] = [new_region_count, messages, max_region_count]
     for region_desc in player_count_dict:
         # edit
-        await notify(region_desc, "The game is over, there is nobody left to play", player_count_dict[region_desc][1])
+        await notify(region_desc, "The game is over, there is nobody left to play.\nSimultaneous players this session had: " + str(player_count_dict[region_desc][2]), player_count_dict[region_desc][1])
     player_count_dict.clear()
     player_count_dict = new_dict
 
