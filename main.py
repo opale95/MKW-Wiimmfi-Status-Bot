@@ -295,10 +295,10 @@ async def notify(region_desc, message_content, messages):
             json.dump({}, new_file)
         notification_subscribers_dict = {}
 
-    if "over" in message_content:
-        colour = discord.Colour.red()
-    elif "waiting" in message_content:
+    if "waiting" in message_content:
         colour = discord.Colour.orange()
+    elif "over" in message_content:
+        colour = discord.Colour.red()
     else:
         colour = discord.Colour.green()
     embed = discord.Embed(colour=colour)
