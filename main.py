@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands, tasks
 import pandas as pd
 import json
+import time
 
 TOKEN = open("token.txt", "r").readline()
 CLIENT_ID = open("client_id.txt", "r").readline()
@@ -307,8 +308,12 @@ async def notify(region_desc, message_content, messages):
     messages_channel_id = []
     if len(messages) != 0:
         for message in messages:
-            messages_channel_id.append(message.channel.id)
-            await message.edit(embed=embed)
+            try:
+                await message.edit(embed=embed)
+            except discord.NotFound as error:
+                print("NotFound: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+            else:
+                messages_channel_id.append(message.channel.id)
 
     for recipient_id in notification_subscribers_dict:
         if region_id in notification_subscribers_dict[recipient_id]:
@@ -316,7 +321,10 @@ async def notify(region_desc, message_content, messages):
             recipient = client.get_user(int(recipient_id))
             if recipient is None:
                 recipient = client.get_channel(int(recipient_id))
-                channel_id = recipient.id
+                if recipient:
+                    channel_id = recipient.id
+                else:
+                    channel_id = None
             else:
                 dm_channel = recipient.dm_channel
                 if dm_channel:
@@ -327,7 +335,7 @@ async def notify(region_desc, message_content, messages):
                 try:
                     message_object = await recipient.send(embed=embed)
                 except discord.Forbidden as error:
-                    print("Forbidden: ", error.text, "\nADRESSEE: ", recipient_id)
+                    print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                 else:
                     messages.append(message_object)
 
