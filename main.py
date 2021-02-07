@@ -100,7 +100,7 @@ async def status(ctx):
 async def invite(ctx):
     """Command that returns an invite link."""
     await ctx.send(
-        "I'd be glad to join your server ! Invite me by clicking on this link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=248897")
+        "I'd be glad to join your server ! Invite me by clicking on this link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=257089")
 
 @client.command()
 async def region(ctx, search):
@@ -331,7 +331,7 @@ async def notify(region_desc, message_content, messages):
                     channel_id = recipient.dm_channel.id
                 else:
                     channel_id = None
-            if channel_id not in messages_channel_id:
+            if recipient and channel_id not in messages_channel_id:
                 try:
                     message_object = await recipient.send(embed=embed)
                 except discord.Forbidden as error:
@@ -348,11 +348,6 @@ async def check():
 
     global player_count_dict
 
-    # if len(player_count_dict) == 0:
-    #     for row in table.itertuples():
-    #         player_count_dict[row[1]] = [row[2], []]
-
-    # else:
     new_dict = {}
 
     for row in table.itertuples():
