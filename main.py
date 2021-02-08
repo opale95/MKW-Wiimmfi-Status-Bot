@@ -9,6 +9,7 @@ from discord.ext import commands, tasks
 import pandas as pd
 import json
 import time
+import datetime
 
 TOKEN = open("token.txt", "r").readline()
 CLIENT_ID = open("client_id.txt", "r").readline()
@@ -246,7 +247,7 @@ async def subscriptions(ctx, *args):
             addressee = "This channel"
         else:
             await ctx.send(
-                "You have not the right to manage this channel. You can subscribe to be notified by Direct Message with the " + PREFIX + "sub REGION_ID command.")
+                "You have not the right to manage this channel.")
             return
     elif len(args) == 0:
         addressee = "You"
@@ -381,28 +382,32 @@ async def check():
                 await notify(region_desc, "Someone is waiting for a new game", messages)
             else:
                 await notify(region_desc, str(new_region_count) + " players", messages)
-        new_dict[region_desc] = [new_region_count, messages, max_region_count]
+        new_dict[region_desc] = [new_region_count, messages, max_region_count, time.time()]
     for region_desc in player_count_dict:
         await notify(region_desc,
-                     "The game is over, there is nobody left to play.\nSimultaneous players this session had: " + str(player_count_dict[region_desc][2]),
-                     player_count_dict[region_desc][1],
-                     )
+                     "The game is over, there is nobody left to play.\nDuration: "
+                     + str(datetime.timedelta(seconds=time.time() - player_count_dict[region_desc][3])).partition('.')[0]
+                     + "\nMaximum simultaneous players: " + str(player_count_dict[region_desc][2]),
+                     player_count_dict[region_desc][1])
     player_count_dict.clear()
     player_count_dict = new_dict
 
 
 @client.command()
 async def clear(ctx, *users):
-    if not ctx.author.permissions_in(ctx.channel).manage_channels:
+    if ctx.channel.type != discord.ChannelType.private and not ctx.author.permissions_in(ctx.channel).manage_channels:
         await ctx.send(
-            "You have not the right to manage this channel. You can unsubscribe to be notified in Direct Message with the " + PREFIX + "unsub REGION_ID command.")
+            "You have not the right to manage this channel.")
         return
     if len(users) > 1 or (len(users) == 1 and users[0] != "users"):
         print("USERS: ", users)
-        await ctx.send("clean command usage: ```mkw:clean``` or ```mkw:clean users```")
+        await ctx.send("clear command usage: ```mkw:clean``` or ```mkw:clean users```")
         return
     users = users and users[0] == "users"
     if users:
+        if ctx.channel.type == discord.ChannelType.private:
+            await ctx.send("I can't remove other messages than mine in a Private Message channel.")
+            return
         clean_message = await ctx.send("I will remove all previous command requests users sent in this channel, it will take some time !")
     else:
         clean_message = await ctx.send("I will remove all previous messages i sent in this channel, it will take some time !")
@@ -423,7 +428,6 @@ async def clear(ctx, *users):
         content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
                 + ".\nThis message and the previous one will be removed in 5 minutes.", delete_after=300.0)
     await ctx.message.delete(delay=300.0)
-    print("FINISHED")
 
 
 @client.event
