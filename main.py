@@ -11,8 +11,8 @@ import json
 import time
 import datetime
 
-TOKEN = open("token.txt", "r").readline()
-CLIENT_ID = open("client_id.txt", "r").readline()
+TOKEN = open("token.txt", "r").readline().removesuffix("\n")
+CLIENT_ID = open("client_id.txt", "r").readline().removesuffix("\n")
 PREFIX = "mkw:"
 
 STATUS_URL = "https://wiimmfi.de/stat?m=80"
