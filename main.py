@@ -378,11 +378,12 @@ async def check():
         else:
             max_region_count = new_region_count
             messages = []
+            start = time.time()
             if new_region_count == 1:
                 await notify(region_desc, "Someone is waiting for a new game", messages)
             else:
                 await notify(region_desc, str(new_region_count) + " players", messages)
-        new_dict[region_desc] = [new_region_count, messages, max_region_count, time.time()]
+        new_dict[region_desc] = [new_region_count, messages, max_region_count, start]
     for region_desc in player_count_dict:
         await notify(region_desc,
                      "The game is over, there is nobody left to play.\nDuration: "
