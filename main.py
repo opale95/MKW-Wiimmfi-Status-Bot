@@ -417,7 +417,7 @@ async def clear(ctx, *users):
     while len(messages) > 0:
         for message in messages:
             read = read + 1
-            if (not users and message.author == client.user) or (users and message.author != client.user and message.content.count("mkw:")):
+            if (not users and message.author == client.user) or (users and message.author != client.user and message.content.count(PREFIX)):
                 found = found + 1
                 try:
                     await message.delete()
