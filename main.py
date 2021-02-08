@@ -51,6 +51,8 @@ async def help(ctx):
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to regions events notifications.\n'
                           'Example: mkw:unsub all or mkw:unsub 870 or mkw:unsub channel all or mkw:unsub channel 870', inline=False)
     embed.add_field(name='mkw:subs or mkw:subs channel', value='Returns the region list for which you or the current channel (if you own the Manage Channels rights) are subscribed to.', inline=False)
+    embed.add_field(name='mkw:clear or mkw:clear users',
+                    value='Removes all the bot messages in the channel or the users command requests (the bot needs Manage Messages permissions to delete users requests).', inline=False)
     embed.add_field(name='mkw:invite', value='Returns a link to invite the bot in your server.', inline=False)
     embed.add_field(name='mkw:help', value='Returns this help list.', inline=False)
     embed.add_field(name='mkw:ping', value='Returns bot response time in milliseconds', inline=False)
@@ -83,6 +85,7 @@ def get_regions_list():
     custom.columns = ["ID", "Name"]
 
     return regions.append(custom)
+
 
 @client.command()
 async def status(ctx):
@@ -310,14 +313,14 @@ async def notify(region_desc, message_content, messages):
         for message in messages:
             try:
                 await message.edit(embed=embed)
-            except discord.NotFound as error:
-                print("NotFound: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+            except (discord.NotFound, discord.Forbidden) as error:
+                print("ERROR: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+                messages.remove(message)
             else:
                 messages_channel_id.append(message.channel.id)
 
     for recipient_id in notification_subscribers_dict:
         if region_id in notification_subscribers_dict[recipient_id]:
-            # await client.wait_until_ready()
             recipient = client.get_user(int(recipient_id))
             if recipient is None:
                 recipient = client.get_channel(int(recipient_id))
@@ -336,6 +339,9 @@ async def notify(region_desc, message_content, messages):
                     message_object = await recipient.send(embed=embed)
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
+                    del notification_subscribers_dict[recipient_id]
+                    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+                        json.dump(notification_subscribers_dict, notification_subscribers_json)
                 else:
                     messages.append(message_object)
 
@@ -359,6 +365,7 @@ async def check():
             prev_region_count = data[0]
             messages = data[1]
             max_region_count = data[2]
+            start = data[3]
             if prev_region_count != new_region_count:
                 if new_region_count > prev_region_count:
                     max_region_count = new_region_count
@@ -376,15 +383,53 @@ async def check():
                 await notify(region_desc, str(new_region_count) + " players", messages)
         new_dict[region_desc] = [new_region_count, messages, max_region_count]
     for region_desc in player_count_dict:
-        # edit
-        await notify(region_desc, "The game is over, there is nobody left to play.\nSimultaneous players this session had: " + str(player_count_dict[region_desc][2]), player_count_dict[region_desc][1])
+        await notify(region_desc,
+                     "The game is over, there is nobody left to play.\nSimultaneous players this session had: " + str(player_count_dict[region_desc][2]),
+                     player_count_dict[region_desc][1],
+                     )
     player_count_dict.clear()
     player_count_dict = new_dict
+
+
+@client.command()
+async def clear(ctx, *users):
+    if not ctx.author.permissions_in(ctx.channel).manage_channels:
+        await ctx.send(
+            "You have not the right to manage this channel. You can unsubscribe to be notified in Direct Message with the " + PREFIX + "unsub REGION_ID command.")
+        return
+    if len(users) > 1 or (len(users) == 1 and users[0] != "users"):
+        print("USERS: ", users)
+        await ctx.send("clean command usage: ```mkw:clean``` or ```mkw:clean users```")
+        return
+    users = users and users[0] == "users"
+    if users:
+        clean_message = await ctx.send("I will remove all previous command requests users sent in this channel, it will take some time !")
+    else:
+        clean_message = await ctx.send("I will remove all previous messages i sent in this channel, it will take some time !")
+    read = 0
+    found = 0
+    messages = await ctx.history(before=clean_message).flatten()
+    while len(messages) > 0:
+        for message in messages:
+            read = read + 1
+            if (not users and message.author == client.user) or (users and message.author != client.user and message.content.count("mkw:")):
+                found = found + 1
+                try:
+                    await message.delete()
+                except (discord.Forbidden, discord.NotFound) as error:
+                    print("ERROR: ", error.text, "\nCHANNEL_ID: ", message.channel.id)
+        messages = await ctx.history(before=messages[len(messages)-1]).flatten()
+    await clean_message.edit(
+        content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
+                + ".\nThis message and the previous one will be removed in 5 minutes.", delete_after=300.0)
+    await ctx.message.delete(delay=300.0)
+    print("FINISHED")
 
 
 @client.event
 async def on_ready():
     check.start()
+
 
 @client.event
 async def on_command_error(ctx, error):
