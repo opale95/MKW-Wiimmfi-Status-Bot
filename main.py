@@ -320,6 +320,7 @@ async def notify(region_desc, message_content, messages):
             else:
                 messages_channel_id.append(message.channel.id)
 
+    to_delete = []
     for recipient_id in notification_subscribers_dict:
         if region_id in notification_subscribers_dict[recipient_id]:
             recipient = client.get_user(int(recipient_id))
@@ -340,11 +341,14 @@ async def notify(region_desc, message_content, messages):
                     message_object = await recipient.send(embed=embed)
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
-                    del notification_subscribers_dict[recipient_id]
-                    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                        json.dump(notification_subscribers_dict, notification_subscribers_json)
+                    to_delete.append(recipient_id)
                 else:
                     messages.append(message_object)
+    for recipient_id in to_delete:
+        del notification_subscribers_dict[recipient_id]
+    if to_delete:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+            json.dump(notification_subscribers_dict, notification_subscribers_json)
 
 
 @tasks.loop(seconds=10)
@@ -427,7 +431,7 @@ async def clear(ctx, *users):
         messages = await ctx.history(before=messages[len(messages)-1]).flatten()
     await clean_message.edit(
         content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
-                + ".\nThis message and the previous one will be removed in 5 minutes.", delete_after=300.0)
+                + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
     await ctx.message.delete(delay=300.0)
 
 
