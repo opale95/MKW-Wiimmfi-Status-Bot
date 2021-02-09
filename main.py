@@ -442,8 +442,9 @@ async def on_ready():
 
 @client.event
 async def on_command_error(ctx, error):
-    # emoji = '\N{EYES}'
-    # await ctx.add_reaction(emoji)
-    await ctx.send(f'Error. Try mkw:help ({error})')
+    try:
+        await ctx.send(f'Error. Try mkw:help ({error})')
+    except discord.Forbidden as error:
+        print("Forbidden: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 client.run(TOKEN)
