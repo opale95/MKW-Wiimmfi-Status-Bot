@@ -160,14 +160,14 @@ async def subscribe(ctx, *args):
             subscriber_id = str(ctx.author.id)
 
         if subscriber_id in notification_subscribers_dict:
-            if region_id in notification_subscribers_dict[subscriber_id]:
+            if region_id in notification_subscribers_dict[subscriber_id]["regions"]:
                 await ctx.send(
                     addressee + " already subscribed to be notified for the region " + region_id + " (" + region_name + ").")
                 return
             else:
-                notification_subscribers_dict[subscriber_id].append(region_id)
+                notification_subscribers_dict[subscriber_id]["regions"].append(region_id)
         else:
-            notification_subscribers_dict[subscriber_id] = [region_id]
+            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": False}
 
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
             json.dump(notification_subscribers_dict, notification_subscribers_json)
@@ -220,14 +220,14 @@ async def unsubscribe(ctx, *args):
             return
     elif subscriber_id in notification_subscribers_dict:
         try:
-            notification_subscribers_dict[subscriber_id].remove(region_id)
+            notification_subscribers_dict[subscriber_id]["regions"].remove(region_id)
         except ValueError:
             await ctx.send(addressee + " did not subscribe to region " + region_id + " notifications.")
         else:
             regions_list = get_regions_list()
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
-            if not notification_subscribers_dict[subscriber_id]:
-                del notification_subscribers_dict[subscriber_id]
+            if not notification_subscribers_dict[subscriber_id]["regions"]:
+                del notification_subscribers_dict[subscriber_id]["regions"]
             await ctx.send(
                 addressee + " will no longer be notified for region " + region_id + " (" + region_name + ").")
     else:
@@ -272,7 +272,7 @@ async def subscriptions(ctx, *args):
         regions_list = get_regions_list()
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=addressee + " subscribed to:")
-        for region_id in notification_subscribers_dict[subscriber_id]:
+        for region_id in notification_subscribers_dict[subscriber_id]["regions"]:
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             embed.add_field(name=region_id, value=region_name, inline=False)
         await ctx.send(embed=embed)
@@ -322,7 +322,7 @@ async def notify(region_desc, message_content, messages):
 
     to_delete = []
     for recipient_id in notification_subscribers_dict:
-        if region_id in notification_subscribers_dict[recipient_id]:
+        if region_id in notification_subscribers_dict[recipient_id]["regions"]:
             recipient = client.get_user(int(recipient_id))
             if recipient is None:
                 recipient = client.get_channel(int(recipient_id))
@@ -405,7 +405,6 @@ async def clear(ctx, *users):
             "You have not the right to manage this channel.")
         return
     if len(users) > 1 or (len(users) == 1 and users[0] != "users"):
-        print("USERS: ", users)
         await ctx.send("clear command usage: ```mkw:clean``` or ```mkw:clean users```")
         return
     users = users and users[0] == "users"
@@ -435,8 +434,43 @@ async def clear(ctx, *users):
     await ctx.message.delete(delay=300.0)
 
 
+def v2_to_v3_json_conv():
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("No JSON to convert.")
+    else:
+        try:
+            item = notification_subscribers_dict.popitem()
+        except KeyError:
+            print("JSON is empty. Nothing to convert.")
+        else:
+            if type(item[1]) == list:
+                for recipient in notification_subscribers_dict:
+                    notification_subscribers_dict[recipient] = {"regions": notification_subscribers_dict[recipient], "less": False}
+                with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+                    json.dump(notification_subscribers_dict, notification_subscribers_json)
+            else:
+                print("JSON is already OK")
+
+
+@client.command()
+async def less(ctx, delay="30"):
+    if ctx.channel.type != discord.ChannelType.private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+        await ctx.send(
+            "You have not the right to manage this channel.")
+        return
+    if not delay.isdigit():
+        await ctx.send("less command usage: ```mkw:less``` or ```mkw:clean DELAY``` (replace DELAY by the number of minutes you want the messages to be deleted after.")
+        return
+
+
+
+
 @client.event
 async def on_ready():
+    v2_to_v3_json_conv()
     check.start()
 
 
