@@ -302,7 +302,7 @@ async def notify(region_desc, message_content, messages):
 
     if "waiting" in message_content:
         colour = discord.Colour.orange()
-    elif "over" in message_content:
+    elif "left" in message_content:
         colour = discord.Colour.red()
     else:
         colour = discord.Colour.green()
@@ -312,8 +312,19 @@ async def notify(region_desc, message_content, messages):
     messages_channel_id = []
     if len(messages) != 0:
         for message in messages:
+            if "then left" in message.content:
+                if message.channel.type == discord.ChannelType.private:
+                    recipient_id = message.author.id
+                else:
+                    recipient_id = message.channel.id
+                delay = notification_subscribers_dict[recipient_id]["less"]
+            else:
+                delay = "0"
             try:
-                await message.edit(embed=embed)
+                if delay == "0":
+                    await message.edit(embed=embed)
+                else:
+                    await message.edit(embed=embed, delete_after=float(delay)*60)
             except (discord.NotFound, discord.Forbidden) as error:
                 print("ERROR: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
                 messages.remove(message)
@@ -337,8 +348,12 @@ async def notify(region_desc, message_content, messages):
                 else:
                     channel_id = None
             if recipient and channel_id not in messages_channel_id:
+                delay = notification_subscribers_dict[recipient_id]["less"]
                 try:
-                    message_object = await recipient.send(embed=embed)
+                    if delay == "0":
+                        message_object = await recipient.send(embed=embed)
+                    else:
+                        message_object = await recipient.send(embed=embed, delete_after=float(delay)*60)
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                     to_delete.append(recipient_id)
@@ -389,11 +404,19 @@ async def check():
                 await notify(region_desc, str(new_region_count) + " players", messages)
         new_dict[region_desc] = {"count": new_region_count, "messages": messages, "max": max_region_count, "start": start}
     for region_desc in player_count_dict:
-        await notify(region_desc,
-                     "The game is over, there is nobody left to play.\nDuration: "
-                     + str(datetime.timedelta(seconds=time.time() - player_count_dict[region_desc]["start"])).partition('.')[0]
-                     + "\nMaximum simultaneous players: " + str(player_count_dict[region_desc]["max"]),
-                     player_count_dict[region_desc]["messages"])
+        max_region_count = player_count_dict[region_desc]["max"]
+        if max_region_count > 1:
+            await notify(region_desc,
+                         "The game is over, there is nobody left to play.\nDuration: "
+                         + str(datetime.timedelta(seconds=time.time() - player_count_dict[region_desc]["start"])).partition(
+                             '.')[0]
+                         + "\nMaximum simultaneous players: " + str(player_count_dict[region_desc]["max"]),
+                         player_count_dict[region_desc]["messages"])
+        else:
+            await notify(region_desc,
+                         "Someone joined a room then left.\nDuration: "
+                         + str(datetime.timedelta(seconds=time.time() - player_count_dict[region_desc]["start"])).partition('.')[0],
+                         player_count_dict[region_desc]["messages"])
     player_count_dict.clear()
     player_count_dict = new_dict
 
@@ -406,7 +429,7 @@ async def clear(ctx, *users):
             "You have not the right to manage this channel.")
         return
     if len(users) > 1 or (len(users) == 1 and users[0] != "users"):
-        await ctx.send("clear command usage: ```mkw:clean``` or ```mkw:clean users```")
+        await ctx.send("clear command usage: ```mkw:clear``` or ```mkw:clear users```")
         return
     users = users and users[0] == "users"
     if users:
@@ -466,7 +489,7 @@ async def less(ctx, delay="15"):
             "You have not the right to manage this channel.")
         return
     if not delay.isdigit():
-        await ctx.send("less command usage: ```mkw:less``` or ```mkw:clean DELAY``` (replace DELAY by the number of minutes you want the messages to be deleted after.")
+        await ctx.send("less command usage: ```mkw:less``` or ```mkw:less DELAY``` (replace DELAY by the number of minutes you want the messages to be deleted after.")
         return
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
@@ -526,7 +549,7 @@ async def more(ctx):
 
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
         json.dump(notification_subscribers_dict, notification_subscribers_json)
-    await ctx.send("From, notifications about 1 player looking for a game session won't be deleted.")
+    await ctx.send("From now, notifications about 1 player looking for a game session won't be deleted.")
 
 
 @client.event
