@@ -370,7 +370,7 @@ async def check():
             prev_region_count = data["count"]
             messages = data["messages"]
             max_region_count = data["max"]
-            start = data[3]
+            start = data["start"]
             if prev_region_count != new_region_count:
                 if new_region_count > prev_region_count:
                     max_region_count = new_region_count
