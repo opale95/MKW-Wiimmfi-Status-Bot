@@ -367,9 +367,9 @@ async def check():
         data = player_count_dict.get(region_desc)
 
         if data:
-            prev_region_count = data[0]
-            messages = data[1]
-            max_region_count = data[2]
+            prev_region_count = data["count"]
+            messages = data["messages"]
+            max_region_count = data["max"]
             start = data[3]
             if prev_region_count != new_region_count:
                 if new_region_count > prev_region_count:
@@ -387,13 +387,13 @@ async def check():
                 await notify(region_desc, "Someone is waiting for a new game", messages)
             else:
                 await notify(region_desc, str(new_region_count) + " players", messages)
-        new_dict[region_desc] = [new_region_count, messages, max_region_count, start]
+        new_dict[region_desc] = {"count": new_region_count, "messages": messages, "max": max_region_count, "start": start}
     for region_desc in player_count_dict:
         await notify(region_desc,
                      "The game is over, there is nobody left to play.\nDuration: "
-                     + str(datetime.timedelta(seconds=time.time() - player_count_dict[region_desc][3])).partition('.')[0]
-                     + "\nMaximum simultaneous players: " + str(player_count_dict[region_desc][2]),
-                     player_count_dict[region_desc][1])
+                     + str(datetime.timedelta(seconds=time.time() - player_count_dict[region_desc]["start"])).partition('.')[0]
+                     + "\nMaximum simultaneous players: " + str(player_count_dict[region_desc]["max"]),
+                     player_count_dict[region_desc]["messages"])
     player_count_dict.clear()
     player_count_dict = new_dict
 
