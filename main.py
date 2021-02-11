@@ -131,14 +131,14 @@ async def subscribe(ctx, *args):
     if text_channel:
         if ctx.author.permissions_in(ctx.channel).manage_channels:
             region_id = args[1]
-            addressee = "This channel"
+            recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel. You can subscribe to be notified in Direct Message with the " + PREFIX + "sub REGION_ID command.")
             return
     elif len(args) == 1:
         region_id = args[0]
-        addressee = "You"
+        recipient = "You"
     else:
         await ctx.send(
             "Error. Usage of sub command: " + PREFIX + "sub REGION_ID or " + PREFIX + "sub channel REGION_ID")
@@ -162,17 +162,17 @@ async def subscribe(ctx, *args):
         if subscriber_id in notification_subscribers_dict:
             if region_id in notification_subscribers_dict[subscriber_id]["regions"]:
                 await ctx.send(
-                    addressee + " already subscribed to be notified for the region " + region_id + " (" + region_name + ").")
+                    recipient + " already subscribed to be notified for the region " + region_id + " (" + region_name + ").")
                 return
             else:
                 notification_subscribers_dict[subscriber_id]["regions"].append(region_id)
         else:
-            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": False}
+            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": "0"}
 
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
             json.dump(notification_subscribers_dict, notification_subscribers_json)
         await ctx.send(
-            addressee + " will now be notified when players will connect to region " + region_id + " (" + region_name + ").")
+            recipient + " will now be notified when players will connect to region " + region_id + " (" + region_name + ").")
 
     else:
         await ctx.send("The region ID " + str(
@@ -186,14 +186,14 @@ async def unsubscribe(ctx, *args):
     if text_channel:
         if ctx.author.permissions_in(ctx.channel).manage_channels:
             region_id = args[1]
-            addressee = "This channel"
+            recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel. You can unsubscribe to be notified in Direct Message with the " + PREFIX + "unsub REGION_ID command.")
             return
     elif len(args) == 1:
         region_id = args[0]
-        addressee = "You"
+        recipient = "You"
     else:
         await ctx.send(
             "Error. Usage of unsub command: " + PREFIX + "unsub REGION_ID or " + PREFIX + "sub channel REGION_ID")
@@ -214,24 +214,24 @@ async def unsubscribe(ctx, *args):
 
     if region_id == "all":
         if notification_subscribers_dict.pop(subscriber_id, None):
-            await ctx.send(addressee + " will no longer receive any notification.")
+            await ctx.send(recipient + " will no longer receive any notification.")
         else:
-            await ctx.send(addressee + " did not subscribe to any region notification.")
+            await ctx.send(recipient + " did not subscribe to any region notification.")
             return
     elif subscriber_id in notification_subscribers_dict:
         try:
             notification_subscribers_dict[subscriber_id]["regions"].remove(region_id)
         except ValueError:
-            await ctx.send(addressee + " did not subscribe to region " + region_id + " notifications.")
+            await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
         else:
             regions_list = get_regions_list()
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             if not notification_subscribers_dict[subscriber_id]["regions"]:
                 del notification_subscribers_dict[subscriber_id]["regions"]
             await ctx.send(
-                addressee + " will no longer be notified for region " + region_id + " (" + region_name + ").")
+                recipient + " will no longer be notified for region " + region_id + " (" + region_name + ").")
     else:
-        await ctx.send(addressee + " did not subscribe to any region notification.")
+        await ctx.send(recipient + " did not subscribe to any region notification.")
         return
 
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
@@ -244,13 +244,13 @@ async def subscriptions(ctx, *args):
     text_channel = len(args) == 1 and args[0] == "channel"
     if text_channel:
         if ctx.author.permissions_in(ctx.channel).manage_channels:
-            addressee = "This channel"
+            recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel.")
             return
     elif len(args) == 0:
-        addressee = "You"
+        recipient = "You"
     else:
         await ctx.send(
             "Error. Usage of subs command: " + PREFIX + "subs or " + PREFIX + "subs channel")
@@ -271,14 +271,14 @@ async def subscriptions(ctx, *args):
     if subscriber_id in notification_subscribers_dict:
         regions_list = get_regions_list()
         embed = discord.Embed(colour=discord.Colour.green())
-        embed.set_author(name=addressee + " subscribed to:")
+        embed.set_author(name=recipient + " subscribed to:")
         for region_id in notification_subscribers_dict[subscriber_id]["regions"]:
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             embed.add_field(name=region_id, value=region_name, inline=False)
         await ctx.send(embed=embed)
 
     else:
-        await ctx.send(addressee + " didn't subscribe to any region notifications.")
+        await ctx.send(recipient + " didn't subscribe to any region notifications.")
 
 
 async def bot_activity(table):
@@ -400,6 +400,7 @@ async def check():
 
 @client.command()
 async def clear(ctx, *users):
+    """"""
     if ctx.channel.type != discord.ChannelType.private and not ctx.author.permissions_in(ctx.channel).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
@@ -435,6 +436,7 @@ async def clear(ctx, *users):
 
 
 def v2_to_v3_json_conv():
+    """"""
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             notification_subscribers_dict = json.load(notification_subscribers_json)
@@ -448,7 +450,7 @@ def v2_to_v3_json_conv():
         else:
             if type(item[1]) == list:
                 for recipient in notification_subscribers_dict:
-                    notification_subscribers_dict[recipient] = {"regions": notification_subscribers_dict[recipient], "less": False}
+                    notification_subscribers_dict[recipient] = {"regions": notification_subscribers_dict[recipient], "less": "0"}
                 with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
                     json.dump(notification_subscribers_dict, notification_subscribers_json)
             else:
@@ -456,16 +458,75 @@ def v2_to_v3_json_conv():
 
 
 @client.command()
-async def less(ctx, delay="30"):
-    if ctx.channel.type != discord.ChannelType.private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+async def less(ctx, delay="15"):
+    """"""
+    private = ctx.channel.type == discord.ChannelType.private
+    if not private and not ctx.author.permissions_in(ctx.channel).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
         return
     if not delay.isdigit():
         await ctx.send("less command usage: ```mkw:less``` or ```mkw:clean DELAY``` (replace DELAY by the number of minutes you want the messages to be deleted after.")
         return
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+        notification_subscribers_dict = {}
 
+    if private:
+        subscriber_id = str(ctx.author.id)
+        recipient = "You"
+    else:
+        subscriber_id = str(ctx.channel.id)
+        recipient = "This channel"
 
+    if subscriber_id in notification_subscribers_dict:
+        notification_subscribers_dict[subscriber_id]["less"] = delay
+    else:
+        await ctx.send(recipient + " didn't subscribe to any region notifications.")
+        return
+
+    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+        json.dump(notification_subscribers_dict, notification_subscribers_json)
+    await ctx.send("Messages i will send about players looking for a game session will now be deleted after " + delay + 
+                   " minutes if no race started.")
+    
+    
+@client.command()
+async def more(ctx):
+    """"""
+    private = ctx.channel.type == discord.ChannelType.private
+    if not private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+        await ctx.send(
+            "You have not the right to manage this channel.")
+        return
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+        notification_subscribers_dict = {}
+
+    if private:
+        subscriber_id = str(ctx.author.id)
+        recipient = "You"
+    else:
+        subscriber_id = str(ctx.channel.id)
+        recipient = "This channel"
+
+    if subscriber_id in notification_subscribers_dict:
+        notification_subscribers_dict[subscriber_id]["less"] = "0"
+    else:
+        await ctx.send(recipient + " didn't subscribe to any region notifications.")
+        return
+
+    with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+        json.dump(notification_subscribers_dict, notification_subscribers_json)
+    await ctx.send("From, notifications about 1 player looking for a game session won't be deleted.")
 
 
 @client.event
