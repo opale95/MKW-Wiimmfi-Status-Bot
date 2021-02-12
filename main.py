@@ -312,11 +312,11 @@ async def notify(region_desc, message_content, messages):
     messages_channel_id = []
     if len(messages) != 0:
         for message in messages:
-            if "then left" in message.content:
+            if "then left" in message_content:
                 if message.channel.type == discord.ChannelType.private:
-                    recipient_id = message.author.id
+                    recipient_id = str(message.channel.recipient.id)
                 else:
-                    recipient_id = message.channel.id
+                    recipient_id = str(message.channel.id)
                 delay = notification_subscribers_dict[recipient_id]["less"]
             else:
                 delay = "0"
@@ -350,10 +350,10 @@ async def notify(region_desc, message_content, messages):
             if recipient and channel_id not in messages_channel_id:
                 delay = notification_subscribers_dict[recipient_id]["less"]
                 try:
-                    if delay == "0":
-                        message_object = await recipient.send(embed=embed)
-                    else:
+                    if "then left" in message_content and delay != "0":
                         message_object = await recipient.send(embed=embed, delete_after=float(delay)*60)
+                    else:
+                        message_object = await recipient.send(embed=embed)
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                     to_delete.append(recipient_id)
@@ -514,8 +514,8 @@ async def less(ctx, delay="15"):
 
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
         json.dump(notification_subscribers_dict, notification_subscribers_json)
-    await ctx.send("Messages i will send about players looking for a game session will now be deleted after " + delay + 
-                   " minutes if no race started.")
+    await ctx.send("Messages i will send about a player joining then leaving a region will now be deleted after " + delay +
+                   " minutes.")
     
     
 @client.command()
@@ -549,7 +549,7 @@ async def more(ctx):
 
     with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
         json.dump(notification_subscribers_dict, notification_subscribers_json)
-    await ctx.send("From now, notifications about 1 player looking for a game session won't be deleted.")
+    await ctx.send("From now on, notifications about a player joining then leaving a region won't be deleted.")
 
 
 @client.event
