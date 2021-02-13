@@ -51,9 +51,12 @@ async def help(ctx):
     embed.add_field(name='mkw:unsub REGION_ID|all or mkw:unsub REGION_ID|all',
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to regions events notifications.\n'
                           'Example: mkw:unsub all or mkw:unsub 870 or mkw:unsub channel all or mkw:unsub channel 870', inline=False)
-    embed.add_field(name='mkw:subs or mkw:subs channel', value='Returns the region list for which you or the current channel (if you own the Manage Channels rights) are subscribed to.', inline=False)
-    embed.add_field(name='mkw:clear or mkw:clear users',
-                    value='Removes all the bot messages in the channel or the users command requests (the bot needs Manage Messages permissions to delete users requests).', inline=False)
+    embed.add_field(name='mkw:subs or mkw:subs channel', value='Returns the region list for which you or the current channel (if you own the Manage Channels rights) are subscribed to.\n'
+                                                               'Also shows after how many minutes "Someone joined a room then left" messages are deleted."', inline=False)
+    embed.add_field(name='mkw:clear or mkw:clear users or mkw:clear 1',
+                    value='Removes all the bot messages in the channel or the users command requests (the bot needs Manage Messages permissions to delete users requests) or messages about someone who joined then left.', inline=False)
+    embed.add_field(name='mkw:less or mkw:less MINUTES', value='Messages about someone who joined then left are deleted after the number you put in place of MINUTES, or 15 minutes by default.', inline=False)
+    embed.add_field(name='mkw:more', value='Messages about someone who joined then left are no longer automatically removed after some minutes.', inline=False)
     embed.add_field(name='mkw:invite', value='Returns a link to invite the bot in your server.', inline=False)
     embed.add_field(name='mkw:help', value='Returns this help list.', inline=False)
     embed.add_field(name='mkw:ping', value='Returns bot response time in milliseconds', inline=False)
@@ -272,6 +275,7 @@ async def subscriptions(ctx, *args):
         regions_list = get_regions_list()
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=recipient + " subscribed to:")
+        embed.set_footer(text="\"Someone joined a room then left\" notifications are deleted after " + notification_subscribers_dict[subscriber_id]["less"] + " minutes.")
         for region_id in notification_subscribers_dict[subscriber_id]["regions"]:
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             embed.add_field(name=region_id, value=region_name, inline=False)
