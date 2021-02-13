@@ -422,21 +422,24 @@ async def check():
 
 
 @client.command()
-async def clear(ctx, *users):
+async def clear(ctx, *args):
     """"""
     if ctx.channel.type != discord.ChannelType.private and not ctx.author.permissions_in(ctx.channel).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
         return
-    if len(users) > 1 or (len(users) == 1 and users[0] != "users"):
-        await ctx.send("clear command usage: ```mkw:clear``` or ```mkw:clear users```")
+    if len(args) > 1 or (len(args) == 1 and args[0] not in ("users", "1")):
+        await ctx.send("clear command usage: ```mkw:clear``` or ```mkw:clear users``` or ```mkw:clear 1```")
         return
-    users = users and users[0] == "users"
+    users = args and args[0] == "users"
+    _1p = args and args[0] == "1"
     if users:
         if ctx.channel.type == discord.ChannelType.private:
             await ctx.send("I can't remove other messages than mine in a Private Message channel.")
             return
         clean_message = await ctx.send("I will remove all previous command requests users sent in this channel, it will take some time !")
+    elif _1p:
+        clean_message = await ctx.send("All previous messages about one player joining then leaving a region will be removed, it will take some time !")
     else:
         clean_message = await ctx.send("I will remove all previous messages i sent in this channel, it will take some time !")
     read = 0
@@ -445,7 +448,17 @@ async def clear(ctx, *users):
     while len(messages) > 0:
         for message in messages:
             read = read + 1
-            if (not users and message.author == client.user) or (users and message.author != client.user and message.content.count(PREFIX)):
+            # if ((not users or (_1p and "then left" in message.content)) and message.author == client.user) or (users and message.author != client.user and PREFIX in message.content):
+
+            # if users:
+            #     if message.author != client.user and PREFIX in message.content:
+            # elif _1p:
+            #     if message.author == client.user and "then left" in message.content:
+            # else:
+            #     if message.author == client.user:
+            if (users and message.author != client.user and PREFIX in message.content) \
+                    or (_1p and message.author == client.user and "Someone" in (message.embeds[0].fields[0].name if message.embeds else [])) \
+                    or (not (users or _1p) and message.author == client.user):
                 found = found + 1
                 try:
                     await message.delete()
