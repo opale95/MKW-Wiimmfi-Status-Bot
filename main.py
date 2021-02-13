@@ -275,7 +275,11 @@ async def subscriptions(ctx, *args):
         regions_list = get_regions_list()
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=recipient + " subscribed to:")
-        embed.set_footer(text="\"Someone joined a room then left\" notifications are deleted after " + notification_subscribers_dict[subscriber_id]["less"] + " minutes.")
+        delay = notification_subscribers_dict[subscriber_id]["less"]
+        if delay != "0":
+            embed.set_footer(text="\"Someone joined a room then left\" notifications are deleted after " + notification_subscribers_dict[subscriber_id]["less"] + " minutes.")
+        else:
+            embed.set_footer(text="\"Someone joined a room then left\" notifications won't be automatically deleted.")
         for region_id in notification_subscribers_dict[subscriber_id]["regions"]:
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             embed.add_field(name=region_id, value=region_name, inline=False)
