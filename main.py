@@ -465,7 +465,7 @@ async def clear(ctx, *args):
             # else:
             #     if message.author == client.user:
             if (users and message.author != client.user and PREFIX in message.content) \
-                    or (_1p and message.author == client.user and "Someone" in (message.embeds[0].fields[0].name if message.embeds else [])) \
+                    or (_1p and message.author == client.user and ("Someone" or "players: 1") in (message.embeds[0].fields[0].name if message.embeds else [])) \
                     or (not (users or _1p) and message.author == client.user):
                 found = found + 1
                 try:
