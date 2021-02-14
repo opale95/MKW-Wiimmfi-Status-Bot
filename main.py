@@ -456,16 +456,8 @@ async def clear(ctx, *args):
     while len(messages) > 0:
         for message in messages:
             read = read + 1
-            # if ((not users or (_1p and "then left" in message.content)) and message.author == client.user) or (users and message.author != client.user and PREFIX in message.content):
-
-            # if users:
-            #     if message.author != client.user and PREFIX in message.content:
-            # elif _1p:
-            #     if message.author == client.user and "then left" in message.content:
-            # else:
-            #     if message.author == client.user:
             if (users and message.author != client.user and PREFIX in message.content) \
-                    or (_1p and message.author == client.user and ("Someone" or "players: 1") in (message.embeds[0].fields[0].name if message.embeds else [])) \
+                    or (_1p and message.author == client.user and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in ["Someone", "players: 1"])) \
                     or (not (users or _1p) and message.author == client.user):
                 found = found + 1
                 try:
