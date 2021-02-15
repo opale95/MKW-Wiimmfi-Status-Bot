@@ -325,7 +325,10 @@ async def notify(region_desc, message_content, messages):
                     recipient_id = str(message.channel.recipient.id)
                 else:
                     recipient_id = str(message.channel.id)
-                delay = notification_subscribers_dict[recipient_id]["less"]
+                if recipient_id in notification_subscribers_dict:
+                    delay = notification_subscribers_dict[recipient_id]["less"]
+                else:
+                    print("RECIPIENT " + recipient_id + " no longer subscribed.")
             else:
                 delay = "0"
             try:
