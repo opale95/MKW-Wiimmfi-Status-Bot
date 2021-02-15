@@ -230,7 +230,7 @@ async def unsubscribe(ctx, *args):
             regions_list = get_regions_list()
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             if not notification_subscribers_dict[subscriber_id]["regions"]:
-                del notification_subscribers_dict[subscriber_id]["regions"]
+                del notification_subscribers_dict[subscriber_id]
             await ctx.send(
                 recipient + " will no longer be notified for region " + region_id + " (" + region_name + ").")
     else:
