@@ -22,3 +22,21 @@ Required library on Raspbian (for Raspberry Pi hardware):
 .. code:: sh
 
 sudo apt-get install libatlas-base-dev
+
+Configuration
+--------------
+	- Go to the Discord Applications website and select/create your App: 
+		https://discord.com/developers/applications/
+	- Client ID:
+		- Click the Copy button under Client ID
+		- Open the client_id.txt file, remove any content then paste.
+	- Token:
+		- Click the Bot section under Settings on the left of the webpage.
+		- Click the Copy button under Token.
+		Open the token.txt file, remove any content then paste.
+
+Usage
+------
+.. code:: sh
+#Linux/macOS
+python3 main.py
