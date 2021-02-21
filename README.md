@@ -20,7 +20,7 @@ py -3 -m pip install -r requirements.txt
 Required library on Raspbian (for Raspberry Pi hardware):
 
 ```sh
-sudo apt-get install libatlas-base-dev
+sudo apt-get install libatlas-base-dev python3-dev
 ```
 
 Configuration
