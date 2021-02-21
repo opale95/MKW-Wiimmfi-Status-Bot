@@ -5,7 +5,7 @@ Wiimmfi server website (from which the data is taken from): https://wiimmfi.de/s
 
 Installing
 ------------
-**Python 3.9 required**
+**Python 3.9.1 required**
 
 Install required libraries:
 
