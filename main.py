@@ -590,6 +590,8 @@ async def on_ready():
             await recipient.send("I just rebooted ! I should be working fine from now on.")
         except (discord.Forbidden, discord.NotFound) as error:
             print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
+        except AttributeError as error:
+            print("client.get_channel() and client.get_user() both returned None. RECIPIENT_ID: " + recipient_id)
 
     check.start()
 
