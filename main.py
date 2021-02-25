@@ -368,6 +368,8 @@ async def notify(region_desc, message_content, messages):
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                     to_delete.append(recipient_id)
+                except discord.DiscordServerError as error:
+                    print("DiscordServerError: ", error.text, "\nRECIPIENT: ", recipient_id)
                 else:
                     messages.append(message_object)
     for recipient_id in to_delete:
@@ -571,6 +573,24 @@ async def more(ctx):
 @client.event
 async def on_ready():
     v2_to_v3_json_conv()
+
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+        notification_subscribers_dict = {}
+
+    for recipient_id in notification_subscribers_dict:
+        recipient = client.get_user(int(recipient_id))
+        if recipient is None:
+            recipient = client.get_channel(int(recipient_id))
+        try:
+            await recipient.send("I just rebooted ! I should be working fine from now on.")
+        except (discord.Forbidden, discord.NotFound) as error:
+            print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
+
     check.start()
 
 
