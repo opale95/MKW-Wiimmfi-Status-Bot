@@ -328,6 +328,7 @@ async def notify(region_desc, message_content, messages):
                 if recipient_id in notification_subscribers_dict:
                     delay = notification_subscribers_dict[recipient_id]["less"]
                 else:
+                    delay = "0"
                     print("RECIPIENT " + recipient_id + " no longer subscribed.")
             else:
                 delay = "0"
@@ -339,6 +340,8 @@ async def notify(region_desc, message_content, messages):
             except (discord.NotFound, discord.Forbidden) as error:
                 print("ERROR: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
                 messages.remove(message)
+            except discord.DiscordServerError as error:
+                print("DiscordServerError: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
             else:
                 messages_channel_id.append(message.channel.id)
 
