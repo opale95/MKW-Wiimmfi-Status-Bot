@@ -20,8 +20,8 @@ REGIONS_URL = "https://wiimmfi.de/reg-stat"
 CUSTOM_REGIONS_URL = "https://wiimmfi.de/reg-list"
 NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
-player_count_table
-regions_list
+player_count_table = None
+regions_list = None
 player_count_dict = {}
 
 intents = discord.Intents.default()
@@ -388,11 +388,11 @@ async def notify(region_desc, message_content, messages):
 @tasks.loop(seconds=10)
 async def check():
     """"""
-    global player_count_table = get_player_count()
-    global regions_list = get_regions_list()
+    global player_count_table, regions_list, player_count_dict
+    
+    player_count_table = get_player_count()
+    regions_list = get_regions_list()
     await bot_activity(player_count_table)
-
-    global player_count_dict
 
     new_dict = {}
 
@@ -579,7 +579,7 @@ async def more(ctx):
 
 @client.event
 async def on_ready():
-    v2_to_v3_json_conv()
+    # v2_to_v3_json_conv()
 
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
