@@ -20,6 +20,7 @@ REGIONS_URL = "https://wiimmfi.de/reg-stat"
 CUSTOM_REGIONS_URL = "https://wiimmfi.de/reg-list"
 NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
+player_count_table
 player_count_dict = {}
 
 intents = discord.Intents.default()
@@ -94,7 +95,8 @@ def get_regions_list():
 @client.command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
-    table = get_player_count(True)
+    global player_count_table
+    table = player_count_table.sort_values(by="Region & Mode")
     embed = discord.Embed(
         colour=discord.Colour.green())
     embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
@@ -385,14 +387,14 @@ async def notify(region_desc, message_content, messages):
 @tasks.loop(seconds=10)
 async def check():
     """"""
-    table = get_player_count()
-    await bot_activity(table)
+    global player_count_table = get_player_count()
+    await bot_activity(player_count_table)
 
     global player_count_dict
 
     new_dict = {}
 
-    for row in table.itertuples():
+    for row in player_count_table.itertuples():
         region_desc = row[1]
         new_region_count = row[2]
         data = player_count_dict.get(region_desc)
