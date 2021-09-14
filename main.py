@@ -590,7 +590,8 @@ async def on_ready():
         if recipient is None:
             recipient = client.get_channel(int(recipient_id))
         try:
-            await recipient.send("I just rebooted ! I should be working fine from now on.")
+            # await recipient.send("I just rebooted ! I should be working fine from now on.")
+            print("on_ready() as been used, must be a reconnection to Discord, or maybe you rebooted/restarted the bot ?")
         except (discord.Forbidden, discord.NotFound) as error:
             print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
         except AttributeError as error:
