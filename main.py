@@ -20,6 +20,8 @@ REGIONS_URL = "https://wiimmfi.de/reg-stat"
 CUSTOM_REGIONS_URL = "https://wiimmfi.de/reg-list"
 NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
 
+player_count_table = None
+regions_list = None
 player_count_dict = {}
 
 intents = discord.Intents.default()
@@ -94,7 +96,8 @@ def get_regions_list():
 @client.command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
-    table = get_player_count(True)
+    global player_count_table
+    table = player_count_table.sort_values(by="Region & Mode")
     embed = discord.Embed(
         colour=discord.Colour.green())
     embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
@@ -112,7 +115,7 @@ async def invite(ctx):
 @client.command()
 async def region(ctx, search):
     """Command to search regions ID's by name."""
-    regions_list = get_regions_list()
+    global regions_list
     filtered_list = regions_list.loc[regions_list["Name"].str.contains(search, case=False)]
 
     embed = discord.Embed(colour=discord.Colour.green())
@@ -147,7 +150,7 @@ async def subscribe(ctx, *args):
             "Error. Usage of sub command: " + PREFIX + "sub REGION_ID or " + PREFIX + "sub channel REGION_ID")
         return
 
-    regions_list = get_regions_list()
+    global regions_list
     if regions_list["ID"].isin([region_id]).any():
         region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
         try:
@@ -227,7 +230,7 @@ async def unsubscribe(ctx, *args):
         except ValueError:
             await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
         else:
-            regions_list = get_regions_list()
+            global regions_list
             region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
             if not notification_subscribers_dict[subscriber_id]["regions"]:
                 del notification_subscribers_dict[subscriber_id]
@@ -272,7 +275,7 @@ async def subscriptions(ctx, *args):
         subscriber_id = str(ctx.author.id)
 
     if subscriber_id in notification_subscribers_dict:
-        regions_list = get_regions_list()
+        global regions_list
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=recipient + " subscribed to:")
         delay = notification_subscribers_dict[subscriber_id]["less"]
@@ -385,14 +388,15 @@ async def notify(region_desc, message_content, messages):
 @tasks.loop(seconds=10)
 async def check():
     """"""
-    table = get_player_count()
-    await bot_activity(table)
-
-    global player_count_dict
+    global player_count_table, regions_list, player_count_dict
+    
+    player_count_table = get_player_count()
+    regions_list = get_regions_list()
+    await bot_activity(player_count_table)
 
     new_dict = {}
 
-    for row in table.itertuples():
+    for row in player_count_table.itertuples():
         region_desc = row[1]
         new_region_count = row[2]
         data = player_count_dict.get(region_desc)
@@ -575,7 +579,7 @@ async def more(ctx):
 
 @client.event
 async def on_ready():
-    v2_to_v3_json_conv()
+    # v2_to_v3_json_conv()
 
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
