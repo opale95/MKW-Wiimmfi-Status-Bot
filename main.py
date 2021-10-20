@@ -10,6 +10,7 @@ import pandas as pd
 import json
 import time
 import datetime
+import requests
 
 TOKEN = open("token.txt", "r").readline().removesuffix("\n")
 CLIENT_ID = open("client_id.txt", "r").readline().removesuffix("\n")
@@ -19,6 +20,10 @@ STATUS_URL = "https://wiimmfi.de/stat?m=80"
 REGIONS_URL = "https://wiimmfi.de/reg-stat"
 CUSTOM_REGIONS_URL = "https://wiimmfi.de/reg-list"
 NOTIFICATION_SUBSCRIBERS_JSON = "notification_subscribers.json"
+
+JSON_API_URL = "https://wiimmfi.de/stats/mkwx?m=json"
+REGIONS_HTML = "regions.html"
+CUSTOM_REGIONS_HTML = "custom_regions.html"
 
 player_count_table = None
 regions_list = None
@@ -77,15 +82,31 @@ def get_player_count(sort=False):
     return table
 
 
+def get_player_count_json():
+    response = requests.get(JSON_API_URL)
+    mkwx_data = response.json()
+    table = {}
+
+    for obj in mkwx_data:
+        if obj["type"] == "room":
+            if obj["region"] in table:
+                table[obj['region']] += obj['n_players']
+            else:
+                table[obj['region']] = obj['n_players']
+
+    return table
+
+
 def get_regions_list():
     """"""
-
-    regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
+    #regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
+    regions = pd.read_html(io=REGIONS_HTML, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = regions.iloc[1:8, [0, 3]]
     regions.columns = ["ID", "Name"]
     regions = regions.astype(str)
 
-    custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
+    #custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
+    custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region")[0]
     custom.drop(custom[custom[0] == "Region"].index, inplace=True)
     custom = custom[[0, 2]]
     custom.columns = ["ID", "Name"]
@@ -97,12 +118,14 @@ def get_regions_list():
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
     global player_count_table
-    table = player_count_table.sort_values(by="Region & Mode")
+    #table = player_count_table.sort_values(by="Region & Mode")
     embed = discord.Embed(
         colour=discord.Colour.green())
     embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
-    for row in table.itertuples():
-        embed.add_field(name=row[1], value=row[2], inline=False)
+    #for row in table.itertuples():
+    for region_id in player_count_table:
+        #embed.add_field(name=row[1], value=row[2], inline=False)
+        embed.add_field(name=str(region_id), value=player_count_table[region_id], inline=False)
     await ctx.send(embed=embed)
 
 
@@ -294,15 +317,19 @@ async def subscriptions(ctx, *args):
 
 async def bot_activity(table):
     """Updates the bot's activity with the total number of MKWii players online."""
-    players_total = table.head(1).iat[0, 1]
+    #players_total = table.head(1).iat[0, 1]
+    players_total = 0
+    for region_id in table:
+        players_total += table[region_id]
     activity = discord.Activity(name='%d people playing Mario Kart Wii online.' % players_total,
                                 type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
 
 
-async def notify(region_desc, message_content, messages):
+#async def notify(region_desc, message_content, messages):
+async def notify(region_id, message_content, messages):
     """"""
-    region_id = region_desc.partition("region ")[2].partition(" (")[0]
+    #region_id = region_desc.partition("region ")[2].partition(" (")[0]
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
             notification_subscribers_dict = json.load(notification_subscribers_json)
@@ -318,7 +345,8 @@ async def notify(region_desc, message_content, messages):
     else:
         colour = discord.Colour.green()
     embed = discord.Embed(colour=colour)
-    embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
+    #embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
+    embed.add_field(name=message_content + " ", value="in region "+str(region_id))
 
     messages_channel_id = []
     if len(messages) != 0:
@@ -390,16 +418,20 @@ async def check():
     """"""
     global player_count_table, regions_list, player_count_dict
     
-    player_count_table = get_player_count()
+    #player_count_table = get_player_count()
+    player_count_table = get_player_count_json()
     regions_list = get_regions_list()
     await bot_activity(player_count_table)
 
     new_dict = {}
 
-    for row in player_count_table.itertuples():
-        region_desc = row[1]
-        new_region_count = row[2]
-        data = player_count_dict.get(region_desc)
+    #for row in player_count_table.itertuples():
+    for region_id in player_count_table:
+        #region_desc = row[1]
+        #new_region_count = row[2]
+        new_region_count = player_count_table[region_id]
+        #data = player_count_dict.get(region_desc)
+        data = player_count_dict.get(region_id)
 
         if data:
             prev_region_count = data["count"]
@@ -410,19 +442,25 @@ async def check():
                 if new_region_count > prev_region_count:
                     max_region_count = new_region_count
                 if new_region_count == 1:
-                    await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
+                    #await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
+                    await notify(region_id, "The game is over, but someone is waiting for a new game", messages)
                 else:
-                    await notify(region_desc, str(new_region_count) + " players", messages)
-            del player_count_dict[region_desc]
+                    #await notify(region_desc, str(new_region_count) + " players", messages)
+                    await notify(region_id, str(new_region_count) + " players", messages)
+            #del player_count_dict[region_desc]
+            del player_count_dict[region_id]
         else:
             max_region_count = new_region_count
             messages = []
             start = time.time()
             if new_region_count == 1:
-                await notify(region_desc, "Someone is waiting for a new game", messages)
+                #await notify(region_desc, "Someone is waiting for a new game", messages)
+                await notify(region_id, "Someone is waiting for a new game", messages)
             else:
-                await notify(region_desc, str(new_region_count) + " players", messages)
-        new_dict[region_desc] = {"count": new_region_count, "messages": messages, "max": max_region_count, "start": start}
+                #await notify(region_desc, str(new_region_count) + " players", messages)
+                await notify(region_id, str(new_region_count) + " players", messages)
+        #new_dict[region_desc] = {"count": new_region_count, "messages": messages, "max": max_region_count, "start": start}
+        new_dict[region_id] = {"count": new_region_count, "messages": messages, "max": max_region_count, "start": start}
     for region_desc in player_count_dict:
         max_region_count = player_count_dict[region_desc]["max"]
         if max_region_count > 1:
