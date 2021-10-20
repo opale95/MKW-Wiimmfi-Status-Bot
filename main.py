@@ -378,7 +378,7 @@ async def notify(region_id, message_content, messages):
 
     to_delete = []
     for recipient_id in notification_subscribers_dict:
-        if region_id in notification_subscribers_dict[recipient_id]["regions"]:
+        if str(region_id) in notification_subscribers_dict[recipient_id]["regions"]:
             recipient = client.get_user(int(recipient_id))
             if recipient is None:
                 recipient = client.get_channel(int(recipient_id))
