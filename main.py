@@ -135,7 +135,7 @@ async def status(ctx):
     for region_id in player_count_table:
         region_name = get_region_name(region_id)
         #embed.add_field(name=row[1], value=row[2], inline=False)
-        embed.add_field(name=region_name + "(region "+str(region_id)+")",
+        embed.add_field(name=region_name + " (region "+str(region_id)+")",
                         value=str(player_count_table[region_id])+" players", inline=False)
     await ctx.send(embed=embed)
 
