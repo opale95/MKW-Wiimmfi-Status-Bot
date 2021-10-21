@@ -114,6 +114,15 @@ def get_regions_list():
     return regions.append(custom)
 
 
+def get_region_name(region_id):
+    global regions_list
+    match = regions_list.loc[regions_list["ID"].str.fullmatch(str(region_id))]
+    if not match.empty:
+        return match.values[0][1]
+    else:
+        return ""
+
+
 @client.command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
@@ -124,8 +133,10 @@ async def status(ctx):
     embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
     #for row in table.itertuples():
     for region_id in player_count_table:
+        region_name = get_region_name(region_id)
         #embed.add_field(name=row[1], value=row[2], inline=False)
-        embed.add_field(name="Region "+str(region_id), value=str(player_count_table[region_id])+" players", inline=False)
+        embed.add_field(name=region_name + "(region "+str(region_id)+")",
+                        value=str(player_count_table[region_id])+" players", inline=False)
     await ctx.send(embed=embed)
 
 
