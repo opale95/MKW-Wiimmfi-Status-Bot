@@ -357,7 +357,8 @@ async def notify(region_id, message_content, messages):
         colour = discord.Colour.green()
     embed = discord.Embed(colour=colour)
     #embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
-    embed.add_field(name=message_content + " ", value="in region "+str(region_id))
+    region_name = get_region_name(region_id)
+    embed.add_field(name=message_content + " ", value="in  " + region_name + " (" + str(region_id) + ")")
 
     messages_channel_id = []
     if len(messages) != 0:
