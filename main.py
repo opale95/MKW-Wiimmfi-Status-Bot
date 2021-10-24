@@ -5,6 +5,7 @@ Wiimmfi server website (from which the data is taken from): https://wiimmfi.de/s
 """
 
 import discord
+import simplejson.errors
 from discord.ext import commands, tasks
 import pandas as pd
 import json
@@ -84,17 +85,23 @@ def get_player_count(sort=False):
 
 def get_player_count_json():
     response = requests.get(JSON_API_URL)
-    mkwx_data = response.json()
-    table = {}
 
-    for obj in mkwx_data:
-        if obj["type"] == "room":
-            if obj["region"] in table:
-                table[obj['region']] += obj['n_players']
-            else:
-                table[obj['region']] = obj['n_players']
+    try:
+        mkwx_data = response.json()
+    except simplejson.errors.JSONDecodeError as error:
+        print("JSONDecodeError: ", error.msg)
+        time.sleep(10)
+        return get_player_count_json()
+    else:
+        table = {}
+        for obj in mkwx_data:
+            if obj["type"] == "room":
+                if obj["region"] in table:
+                    table[obj['region']] += obj['n_players']
+                else:
+                    table[obj['region']] = obj['n_players']
 
-    return table
+        return table
 
 
 def get_regions_list():
