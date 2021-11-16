@@ -32,7 +32,7 @@ if (document.body)
 JavaScript is used for many interactive elements of this website.</div></noscript>
 <div style="margin-bottom:28px"></div>
 <div id=navbar class=nb-fixed><span class="nb-frame nb-classic">
-<span class="nb-menu-user">»<a href="/user/status?v=106758">opale95</a>« <span class="nb-menu-info">⇒</span></span><div class=nb-menu><button class=nb-button>Wiimmfi</button><div class=nb-submenu>
+<div class=nb-menu><button class=nb-button>Wiimmfi</button><div class=nb-submenu>
 <div class="nb-menu-sep"> </div>
 <a class="nb-menu-link" href="/" title="Wiimmfi main page — includes announcements.">Main page</a>
 <a class="nb-menu-link" href="/changelog">Change log</a>
@@ -43,10 +43,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
 <a class="nb-menu-link" href="https://wiimmfi.de/patcher/">Wiimmfi patcher</a>
 <a class="nb-menu-link" href="/error">Error codes</a>
 <div class="nb-menu-sep"> </div>
-<a class="nb-menu-link" href="/privacy">Privacy Policy</a>
-<a class="nb-menu-link" href="/donate">Donate</a>
-<div class="nb-menu-sep"> </div>
-<a class="nb-menu-link" href="/logout">Logout</a>
+<a class="nb-menu-link" href="/login">Login</a>
 <span class="nb-menu-sep"> </span>
 </div></div>
 <div class=nb-menu><button class=nb-button>Status</button><div class=nb-submenu>
@@ -59,24 +56,10 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
 <a class="nb-menu-link" href="/stats/mkw" title="Mario Kart Wii statistics">MKW statistics</a>
 <span class="nb-menu-sep"> </span>
 </div></div>
-<div class=nb-menu><button class=nb-button>Manage</button><div class=nb-submenu>
-<div class="nb-menu-sep"> </div>
-<a class="nb-menu-link" href="/user/settings">Private settings</a>
-<a class="nb-menu-link" href="/payload/settings">Private MKW settings</a>
-<a class="nb-menu-link" href="/user/status" title="Rights, consoles, profiles, ...">Private status</a>
-<a class="nb-menu-link" href="/user/messages">Private messages</a>
-<div class="nb-menu-sep"> </div>
-<a class="nb-menu-link" href="/user/assign-console">Assign a console</a>
-<a class="nb-menu-link" href="/openhost">Manage OPENHOST</a>
-<span class="nb-menu-sep"> </span>
-</div></div>
 <div class=nb-menu><button class=nb-button>Regions</button><div class=nb-submenu>
 <div class="nb-menu-sep"> </div>
 <a class="nb-menu-link active" href="/reg-stat" title="MKWii region usage statistics">Region usage</a>
 <a class="nb-menu-link" href="/reg-list" title="List MKWii regions">List custom regions</a>
-<div class="nb-menu-sep"> </div>
-<a class="nb-menu-link" href="/reg-apply" title="Apply MKWii regions">Apply regions</a>
-<a class="nb-menu-link" href="/reg-manage" title="Manage own MKWii regions">Manage own regions</a>
 <span class="nb-menu-sep"> </span>
 </div></div>
 <div class=nb-menu><button class=nb-button>Competitions</button><div class=nb-submenu>
@@ -85,6 +68,8 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
 <a class="nb-menu-link" href="/comp-stat">Statistics</a>
 <span class="nb-menu-sep"> </span>
 </div></div>
+<a class="nb-menu-link" href="/privacy">Privacy Policy</a>
+<a class="nb-menu-link" href="/donate">Donate</a>
 </span>
 </div>
 <div class=logo><a href=/><img src="/images/wiimmfi-light.svg" alt="Wiimmfi logo" title="Wiimmfi logo"></a><p><a href=https://wiimmfi.de/donate>Donate</a></div>
@@ -118,22 +103,22 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>World Wide</td>
- <td align=center>7161</td><td align=center>79741</td><td align=center>78998</td><td align=center>97585</td>
+ <td align=center>37168</td><td align=center>79741</td><td align=center>78998</td><td align=center>97585</td>
  <td><a data-href=/stats/track/mv/-1><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>0</td>
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Japan</td>
- <td align=center>131</td><td align=center>1999</td><td align=center>2570</td><td align=center>2657</td>
+ <td align=center>661</td><td align=center>1999</td><td align=center>2570</td><td align=center>2657</td>
  <td><a data-href=/stats/track/mv/0><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>1</td>
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>America</td>
- <td align=center>11</td><td align=center>307</td><td align=center>373</td><td align=center>670</td>
+ <td align=center>79</td><td align=center>307</td><td align=center>373</td><td align=center>670</td>
  <td><a data-href=/stats/track/mv/1><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>2</td>
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Europe</td>
- <td align=center>&mdash;</td><td align=center>61</td><td align=center>52</td><td align=center>256</td>
+ <td align=center>40</td><td align=center>61</td><td align=center>52</td><td align=center>256</td>
  <td><a data-href=/stats/track/mv/2><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>3</td>
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -153,7 +138,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>B-C-</tt></td>
  <td>CTGP v1.03</td>
- <td align=center>1795</td><td align=center>6566</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td align=center>9569</td><td align=center>6566</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/41><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>52</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>B-C-</tt></td>
@@ -164,11 +149,16 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center><tt>B-C-</tt></td>
  <td>CTGP v1.03</td>
  <td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>17774</td><td align=center>28748</td>
- <td><a data-href=/stats/track/mv/55><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>70</td>
+ <td><a data-href=/stats/track/mv/55><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>57</td>
+ <td align=center class="reg-allow">Allow</td>
+ <td align=center><tt>B-C-</tt></td>
+ <td>CTGP v1.03</td>
+ <td align=center>43</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td><a data-href=/stats/track/mv/57><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>70</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Mario Kart Wii Deluxe v5.5</td>
- <td align=center>302</td><td align=center>2140</td><td align=center>23</td><td align=center>&mdash;</td>
+ <td align=center>1194</td><td align=center>2140</td><td align=center>23</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/70><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>71</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -183,7 +173,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Variety Pack v2 Time Attack</td>
- <td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>3</td>
+ <td align=center>3</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>3</td>
  <td><a data-href=/stats/track/mv/74><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>76</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -198,22 +188,22 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Variety Pack v2</td>
- <td align=center>&mdash;</td><td align=center>44</td><td align=center>&mdash;</td><td align=center>83</td>
+ <td align=center>52</td><td align=center>44</td><td align=center>&mdash;</td><td align=center>83</td>
  <td><a data-href=/stats/track/mv/85><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>86</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Variety Pack v2 Chaotic</td>
- <td align=center>&mdash;</td><td align=center>11</td><td align=center>&mdash;</td><td align=center>20</td>
+ <td align=center>2</td><td align=center>11</td><td align=center>&mdash;</td><td align=center>20</td>
  <td><a data-href=/stats/track/mv/86><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>89</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>B-C-</tt></td>
  <td>Yeet Kart Wii</td>
- <td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>20</td>
+ <td align=center>43</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>20</td>
  <td><a data-href=/stats/track/mv/89><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>91</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>RC1 of comming MKW-Fun</td>
- <td align=center>&mdash;</td><td align=center>85</td><td align=center>86</td><td align=center>&mdash;</td>
+ <td align=center>11</td><td align=center>85</td><td align=center>86</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/91><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>139</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -238,12 +228,12 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Wiimms MKW-Fun 2020-12</td>
- <td align=center>22</td><td align=center>17</td><td align=center>49</td><td align=center>540</td>
+ <td align=center>36</td><td align=center>17</td><td align=center>49</td><td align=center>540</td>
  <td><a data-href=/stats/track/mv/145><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>146</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Wiimms MKW-Fun 2021-09</td>
- <td align=center>90</td><td align=center>221</td><td align=center>253</td><td align=center>&mdash;</td>
+ <td align=center>461</td><td align=center>221</td><td align=center>253</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/146><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>177</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -268,12 +258,12 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Yosh's Track Pack DX v1.3.0</td>
- <td align=center>41</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td align=center>105</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/226><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>250</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>CTGP Revolution Classic v2.11</td>
- <td align=center>&mdash;</td><td align=center>366</td><td align=center>797</td><td align=center>126</td>
+ <td align=center>336</td><td align=center>366</td><td align=center>797</td><td align=center>126</td>
  <td><a data-href=/stats/track/mv/250><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>251</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -293,7 +283,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>--CS</tt></td>
  <td>TTs online</td>
- <td align=center>144</td><td align=center>1166</td><td align=center>941</td><td align=center>884</td>
+ <td align=center>1080</td><td align=center>1166</td><td align=center>941</td><td align=center>884</td>
  <td><a data-href=/stats/track/mv/400><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>470</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -313,13 +303,18 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>vX MKW Hack Pack Regular</td>
- <td align=center>&mdash;</td><td align=center>146</td><td align=center>142</td><td align=center>278</td>
+ <td align=center>50</td><td align=center>146</td><td align=center>142</td><td align=center>278</td>
  <td><a data-href=/stats/track/mv/602><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>614</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Blade's Test Region</td>
  <td align=center>&mdash;</td><td align=center>18</td><td align=center>19</td><td align=center>27</td>
- <td><a data-href=/stats/track/mv/614><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>623</td>
+ <td><a data-href=/stats/track/mv/614><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>622</td>
+ <td align=center class="reg-allow">Allow</td>
+ <td align=center><tt>B-CS</tt></td>
+ <td>Cosmic Kart</td>
+ <td align=center>31</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td><a data-href=/stats/track/mv/622><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>623</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>B-CS</tt></td>
  <td>Yoshi's Racing Resort (Plus)</td>
@@ -348,7 +343,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Mario Kart Wii Deluxe v5.0</td>
- <td align=center>&mdash;</td><td align=center>1109</td><td align=center>1764</td><td align=center>2783</td>
+ <td align=center>1</td><td align=center>1109</td><td align=center>1764</td><td align=center>2783</td>
  <td><a data-href=/stats/track/mv/760><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>821</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -373,7 +368,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>OptPack Region 4</td>
- <td align=center>16</td><td align=center>6</td><td align=center>20</td><td align=center>55</td>
+ <td align=center>20</td><td align=center>6</td><td align=center>20</td><td align=center>55</td>
  <td><a data-href=/stats/track/mv/878><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>879</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -383,7 +378,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Mario Kart Fusion V3</td>
- <td align=center>&mdash;</td><td align=center>150</td><td align=center>75</td><td align=center>196</td>
+ <td align=center>12</td><td align=center>150</td><td align=center>75</td><td align=center>196</td>
  <td><a data-href=/stats/track/mv/886><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>2005</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -403,7 +398,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>--C-</tt></td>
  <td>Mario Kart 6.5 (Riibalanced)</td>
- <td align=center>246</td><td align=center>82</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td align=center>2201</td><td align=center>82</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/3565><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>7778</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>--C-</tt></td>
@@ -413,7 +408,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>-G--</tt></td>
  <td>Formula Kart Wii</td>
- <td align=center>14</td><td align=center>231</td><td align=center>242</td><td align=center>209</td>
+ <td align=center>57</td><td align=center>231</td><td align=center>242</td><td align=center>209</td>
  <td><a data-href=/stats/track/mv/20045><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>20046</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>----</tt></td>
@@ -423,17 +418,17 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>----</tt></td>
  <td>MKWBR v2.0: Around the World Update R</td>
- <td align=center>19</td><td align=center>7</td><td align=center>28</td><td align=center>&mdash;</td>
+ <td align=center>27</td><td align=center>7</td><td align=center>28</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/20052><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>20053</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>----</tt></td>
  <td>Hide and Seek</td>
- <td align=center>71</td><td align=center>1522</td><td align=center>1379</td><td align=center>2247</td>
+ <td align=center>416</td><td align=center>1522</td><td align=center>1379</td><td align=center>2247</td>
  <td><a data-href=/stats/track/mv/20053><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>20222</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>----</tt></td>
  <td>Wiimm's Intermezzo</td>
- <td align=center>20</td><td align=center>109</td><td align=center>92</td><td align=center>107</td>
+ <td align=center>91</td><td align=center>109</td><td align=center>92</td><td align=center>107</td>
  <td><a data-href=/stats/track/mv/20222><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr></table>
 </div>
 <div class="text">
@@ -457,7 +452,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>World Wide</td>
- <td align=center>228</td><td align=center>3459</td><td align=center>3769</td><td align=center>5289</td>
+ <td align=center>1395</td><td align=center>3459</td><td align=center>3769</td><td align=center>5289</td>
  <td><a data-href=/stats/track/mv/-1><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>0</td>
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
@@ -467,17 +462,17 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>America</td>
- <td align=center>&mdash;</td><td align=center>21</td><td align=center>9</td><td align=center>6</td>
+ <td align=center>1</td><td align=center>21</td><td align=center>9</td><td align=center>6</td>
  <td><a data-href=/stats/track/mv/1><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>2</td>
  <td align=center class="reg-orig">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Europe</td>
- <td align=center>&mdash;</td><td align=center>89</td><td align=center>42</td><td align=center>118</td>
+ <td align=center>32</td><td align=center>89</td><td align=center>42</td><td align=center>118</td>
  <td><a data-href=/stats/track/mv/2><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>70</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center><tt>BGCS</tt></td>
  <td>Mario Kart Wii Deluxe v5.5</td>
- <td align=center>2</td><td align=center>11</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td align=center>9</td><td align=center>11</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/70><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>99</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>----</tt></td>
@@ -488,7 +483,12 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center><tt>BGCS</tt></td>
  <td>Wiimms MKW-Fun 2020-12</td>
  <td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>4</td>
- <td><a data-href=/stats/track/mv/145><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>400</td>
+ <td><a data-href=/stats/track/mv/145><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>146</td>
+ <td align=center class="reg-allow">Allow</td>
+ <td align=center><tt>BGCS</tt></td>
+ <td>Wiimms MKW-Fun 2021-09</td>
+ <td align=center>3</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td><a data-href=/stats/track/mv/146><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>400</td>
  <td align=center class="reg-deny">Deny</td>
  <td align=center><tt>--CS</tt></td>
  <td>TTs online</td>
@@ -518,7 +518,12 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-cheat"><tt>----</tt></td>
  <td>MKWBR v2.0: Around the World Update B</td>
  <td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>8</td><td align=center>&mdash;</td>
- <td><a data-href=/stats/track/mv/20052><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>20222</td>
+ <td><a data-href=/stats/track/mv/20052><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>20053</td>
+ <td align=center class="reg-allow">Allow</td>
+ <td align=center class="reg-cheat"><tt>----</tt></td>
+ <td>Hide and Seek Infection Mode</td>
+ <td align=center>3</td><td align=center>&mdash;</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td><a data-href=/stats/track/mv/20053><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>20222</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>----</tt></td>
  <td>Wiimm's Intermezzo</td>
@@ -546,7 +551,7 @@ JavaScript is used for many interactive elements of this website.</div></noscrip
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>B---</tt></td>
  <td>CTGP v1.03</td>
- <td align=center>7</td><td align=center>238</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
+ <td align=center>368</td><td align=center>238</td><td align=center>&mdash;</td><td align=center>&mdash;</td>
  <td><a data-href=/stats/track/mv/41><img class=text-img src=/images/tcount-19x16.png title=tu></a></td></tr><tr><td align=center>52</td>
  <td align=center class="reg-allow">Allow</td>
  <td align=center class="reg-cheat"><tt>B---</tt></td>
