@@ -5,7 +5,6 @@ Wiimmfi server website (from which the data is taken from): https://wiimmfi.de/s
 """
 
 import discord
-import simplejson.errors
 from discord.ext import commands, tasks
 import pandas as pd
 import json
@@ -88,7 +87,7 @@ def get_player_count_json():
 
     try:
         mkwx_data = response.json()
-    except simplejson.errors.JSONDecodeError as error:
+    except json.decoder.JSONDecodeError as error:
         print("JSONDecodeError: ", error.msg)
         time.sleep(10)
         return get_player_count_json()
@@ -108,7 +107,7 @@ def get_regions_list():
     """"""
     #regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = pd.read_html(io=REGIONS_HTML, match="Versus Race Regions of Mario Kart Wii")[0]
-    regions = regions.iloc[1:8, [0, 3]]
+    regions = regions.iloc[:8, [0, 3]]
     regions.columns = ["ID", "Name"]
     regions = regions.astype(str)
 
@@ -118,7 +117,8 @@ def get_regions_list():
     custom = custom[[0, 2]]
     custom.columns = ["ID", "Name"]
 
-    return regions.append(custom)
+    return pd.concat([regions, custom])
+    #return regions.append(custom)
 
 
 def get_region_name(region_id):
@@ -152,6 +152,7 @@ async def invite(ctx):
     """Command that returns an invite link."""
     await ctx.send(
         "I'd be glad to join your server ! Invite me by clicking on this link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=257089")
+
 
 @client.command()
 async def region(ctx, search):
