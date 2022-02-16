@@ -25,7 +25,8 @@ JSON_API_URL = "https://wiimmfi.de/stats/mkwx?m=json"
 REGIONS_HTML = "regions.html"
 CUSTOM_REGIONS_HTML = "custom_regions.html"
 
-PRIVATE_REGION_ID = -9
+HIDDEN_REGIONS = {-9: "Private rooms",
+                  99999: "World Wide (Battle)"}
 
 player_count_table = None
 regions_list = None
@@ -124,8 +125,9 @@ def get_regions_list():
 
 
 def get_region_name(region_id):
-    if region_id == PRIVATE_REGION_ID:
-        return "Private rooms"
+    name = HIDDEN_REGIONS.get(region_id)
+    if name is not None:
+        return name
     else:
         global regions_list
         match = regions_list.loc[regions_list["ID"].str.fullmatch(str(region_id))]
