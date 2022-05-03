@@ -466,7 +466,7 @@ async def check():
             max_region_count = data["max"]
             start = data["start"]
             if prev_region_count != new_region_count:
-                if new_region_count > prev_region_count:
+                if new_region_count > max_region_count:
                     max_region_count = new_region_count
                 if new_region_count == 1:
                     #await notify(region_desc, "The game is over, but someone is waiting for a new game", messages)
