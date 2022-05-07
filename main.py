@@ -421,7 +421,11 @@ async def notify(region_id, notification_content, messages):
                 print("ERROR: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
                 messages.remove(message)
             except discord.DiscordServerError as error:
-                print("DiscordServerError: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+                print("DiscordServerError: ", error.status, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+            except discord.errors.HTTPException as error:
+                print("HTTPException: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+            except Exception as error:
+                print("ERROR: ", error)
             else:
                 messages_channel_id.append(message.channel.id)
 
@@ -451,8 +455,9 @@ async def notify(region_id, notification_content, messages):
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                     to_delete.append(recipient_id)
-                except discord.DiscordServerError as error:
-                    print("DiscordServerError: ", error.text, "\nRECIPIENT: ", recipient_id)
+                except (discord.DiscordServerError, discord.Forbidden, discord.NotFound, discord.HTTPException)\
+                        as error:
+                    print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
                 else:
                     messages.append(message_object)
     for recipient_id in to_delete:
