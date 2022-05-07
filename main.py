@@ -420,10 +420,8 @@ async def notify(region_id, notification_content, messages):
             except (discord.NotFound, discord.Forbidden) as error:
                 print("ERROR: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
                 messages.remove(message)
-            except discord.DiscordServerError as error:
-                print("DiscordServerError: ", error.status, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
-            except discord.errors.HTTPException as error:
-                print("HTTPException: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
+            except (discord.DiscordServerError, discord.HTTPException) as error:
+                print("ERROR: ", error.text, "\nMESSAGE.CHANNEL.ID: ", message.channel.id)
             except Exception as error:
                 print("ERROR: ", error)
             else:
