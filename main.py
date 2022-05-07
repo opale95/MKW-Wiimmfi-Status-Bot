@@ -139,7 +139,7 @@ def get_regions_list():
 
 
 def get_region_name(region_id):
-    name = HIDDEN_REGIONS.get(region_id)
+    name = HIDDEN_REGIONS.get(int(region_id))
     if name is not None:
         return name
     else:
@@ -157,14 +157,17 @@ async def status(ctx):
     global player_count_table
     # table = player_count_table.sort_values(by="Region & Mode")
     embed = discord.Embed(
-        colour=discord.Colour.green())
-    embed.set_author(name="Mario Kart Wii: Wiimmfi Online players")
+        colour=discord.Colour.green(), title="Mario Kart Wii: Wiimmfi Online players")
     # for row in table.itertuples():
+    total = 0
     for region_id in player_count_table:
         region_name = get_region_name(region_id)
+        players_nb = player_count_table[region_id]
+        total += players_nb
         # embed.add_field(name=row[1], value=row[2], inline=False)
         embed.add_field(name=region_name + " (region " + str(region_id) + ")",
-                        value=str(player_count_table[region_id]) + " players", inline=False)
+                        value=str(players_nb) + " players", inline=False)
+    embed.set_footer(text='---------------------------\n'+str(total)+' players on MKW')
     await ctx.send(embed=embed)
 
 
@@ -177,19 +180,27 @@ async def invite(ctx):
 
 
 @client.command()
-async def region(ctx, search):
+async def region(ctx, search: str):
     """Command to search regions ID's by name."""
     global regions_list
+    results = {}
+
+    for region_id in HIDDEN_REGIONS:
+        if search.casefold() in HIDDEN_REGIONS[region_id].casefold():
+            results[region_id]=HIDDEN_REGIONS[region_id]
+
     filtered_list = regions_list.loc[regions_list["Name"].str.contains(search, case=False)]
 
     embed = discord.Embed(colour=discord.Colour.green())
     embed.set_author(name="Region ID search")
 
-    if filtered_list.empty:
+    if filtered_list.empty and not results:
         embed.colour = discord.Colour.red()
         embed.add_field(name="No result",
                         value="Regions list: https://wiimmfi.de/reg-stat or https://wiimmfi.de/reg-list")
     else:
+        for region_id in results:
+            embed.add_field(name=results[region_id], value=region_id)
         for row in filtered_list.itertuples():
             embed.add_field(name=row[2], value=row[1])
     await ctx.send(embed=embed)
@@ -217,8 +228,9 @@ async def subscribe(ctx, *args):
         return
 
     global regions_list
-    if regions_list["ID"].isin([region_id]).any():
-        region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+    if int(region_id) in HIDDEN_REGIONS or regions_list["ID"].isin([region_id]).any():
+        # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+        region_name = get_region_name(region_id)
         try:
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
                 notification_subscribers_dict = json.load(notification_subscribers_json)
@@ -301,7 +313,8 @@ async def unsubscribe(ctx, *args):
             await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
         else:
             global regions_list
-            region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+            # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+            region_name = get_region_name(region_id)
             if not notification_subscribers_dict[subscriber_id]["regions"]:
                 del notification_subscribers_dict[subscriber_id]
             await ctx.send(
@@ -355,7 +368,8 @@ async def subscriptions(ctx, *args):
         else:
             embed.set_footer(text="\"Someone joined a room then left\" notifications won't be automatically deleted.")
         for region_id in notification_subscribers_dict[subscriber_id]["regions"]:
-            region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+            # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+            region_name = get_region_name(region_id)
             embed.add_field(name=region_id, value=region_name, inline=False)
         await ctx.send(embed=embed)
 
