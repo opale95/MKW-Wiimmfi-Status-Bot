@@ -26,7 +26,8 @@ REGIONS_HTML = "regions.html"
 CUSTOM_REGIONS_HTML = "custom_regions.html"
 
 HIDDEN_REGIONS = {-9: "Private rooms",
-                  99999: "World Wide (Battle)"}
+                  99999: "World Wide (Battle)",
+                  200052: "CTGP v1.03 (Count down)"}
 
 player_count_table = {}
 regions_list = None
@@ -262,7 +263,7 @@ async def subscribe(ctx, *args):
 
     else:
         await ctx.send("The region ID " + str(
-            region_id) + "does not exist. You can search regions IDs with ```mkw:region \"words to search\"``` or "
+            region_id) + " does not exist. You can search regions IDs with ```mkw:region \"words to search\"``` or "
                          "```mkw:region word_to_search```")
 
 
@@ -721,7 +722,8 @@ async def on_ready():
     #     except AttributeError as error:
     #         print("client.get_channel() and client.get_user() both returned None. RECIPIENT_ID: " + recipient_id)
 
-    check.start()
+    if not check.is_running():
+        check.start()
 
 
 @client.event
