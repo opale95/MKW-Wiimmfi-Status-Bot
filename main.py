@@ -27,7 +27,8 @@ CUSTOM_REGIONS_HTML = "custom_regions.html"
 
 HIDDEN_REGIONS = {-9: "Private rooms",
                   99999: "World Wide (Battle)",
-                  200052: "CTGP v1.03 (Count down)"}
+                  200052: "CTGP v1.03 (Count down)",
+                  100501: "Bob-omb Blast Revolution"}
 
 player_count_table = {}
 regions_list = None
