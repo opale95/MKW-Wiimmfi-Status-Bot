@@ -159,7 +159,8 @@ async def status(ctx):
     global player_count_table
     # table = player_count_table.sort_values(by="Region & Mode")
     embed = discord.Embed(
-        colour=discord.Colour.green(), title="Mario Kart Wii: Wiimmfi Online players")
+        colour=discord.Colour.green(), title="Mario Kart Wii: Wiimmfi Online players",
+        timestamp=datetime.datetime.utcnow())
     # for row in table.itertuples():
     total = 0
     for region_id in player_count_table:
@@ -408,7 +409,7 @@ async def notify(region_id, notification_content, messages):
         colour = discord.Colour.red()
     else:
         colour = discord.Colour.green()
-    embed = discord.Embed(colour=colour)
+    embed = discord.Embed(colour=colour, timestamp=datetime.datetime.utcnow())
     # embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
     region_name = get_region_name(region_id)
     embed.add_field(name=notification_content + " ", value="in  " + region_name + " (region " + str(region_id) + ")")
