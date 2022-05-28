@@ -29,9 +29,12 @@ HIDDEN_REGIONS = {-9: "Private rooms",
                   99999: "World Wide (Battle)",
                   200027: "CTGP v1.03 (Count down)",
                   200028: "CTGP v1.03 (Count down)",
+                  200033: "CTGP v1.03 (Count down)",
                   200040: "CTGP v1.03 (Count down)",
+                  200046: "CTGP v1.03 (Count down)",
                   200047: "CTGP v1.03 (Count down)",
                   200052: "CTGP v1.03 (Count down)",
+                  200059: "CTGP v1.03 (Count down)",
                   100501: "Bob-omb Blast Revolution"}
 
 player_count_table = {}
