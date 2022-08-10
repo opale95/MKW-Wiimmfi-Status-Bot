@@ -36,8 +36,8 @@ HIDDEN_REGIONS = {-9: "Private rooms",
                   200052: "CTGP v1.03 (Count down)",
                   200059: "CTGP v1.03 (Count down)",
                   100501: "Bob-omb Blast Revolution",
-                  100210: "Mario Kart Wii Deluxe v6.0 (Battle)"}
-                  200037: "CTGP v1.03 (Count down)",
+                  100210: "Mario Kart Wii Deluxe v6.0 (Battle)",
+                  200037: "CTGP v1.03 (Count down)"}
 
 player_count_table = {}
 regions_list = None
