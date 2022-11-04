@@ -153,13 +153,12 @@ def get_region_name(region_id):
     name = HIDDEN_REGIONS.get(int(region_id))
     if name is not None:
         return name
-    else:
-        global regions_list
-        match = regions_list.loc[regions_list["ID"].str.fullmatch(str(region_id))]
-        if not match.empty:
-            return match.values[0][1]
-        else:
-            return ""
+        
+	global regions_list
+	match = regions_list.loc[regions_list["ID"].str.fullmatch(str(region_id))]
+	if not match.empty:
+		return match.values[0][1]
+	return ""
 
 
 @client.command()
