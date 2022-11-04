@@ -140,7 +140,7 @@ def get_regions_list():
     regions = regions.astype(str)
 
     # custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
-    custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region")[0]
+    custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
     custom.drop(custom[custom[0] == "Region"].index, inplace=True)
     custom = custom[[0, 2]]
     custom.columns = ["ID", "Name"]
