@@ -153,7 +153,7 @@ def get_region_name(region_id):
     name = HIDDEN_REGIONS.get(int(region_id))
     if name is not None:
         return name
-        
+
 	global regions_list
 	match = regions_list.loc[regions_list["ID"].str.fullmatch(str(region_id))]
 	if not match.empty:
