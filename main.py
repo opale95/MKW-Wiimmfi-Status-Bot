@@ -145,6 +145,7 @@ def get_regions_list():
     #custom = custom[[0, 2]]
     custom = custom.iloc[0:,[0,2]]
     custom.columns = ["ID", "Name"]
+    custom = custom.astype(str)
 
     return pd.concat([regions, custom])
     # return regions.append(custom)
