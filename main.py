@@ -718,6 +718,7 @@ async def on_ready():
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
 
+    print("This bot is connected to " + str(len(client.guilds)) + " Discord guilds.")
     print("on_ready() as been used, must be a reconnection to Discord, or maybe you rebooted/restarted the bot ?")
     #     notification_subscribers_dict = {}
     #
