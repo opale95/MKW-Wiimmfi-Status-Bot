@@ -47,6 +47,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
 client = commands.Bot(command_prefix=PREFIX, intents=intents)
+guilds_count = 0
 
 
 @client.command()
@@ -180,7 +181,8 @@ async def status(ctx):
         # embed.add_field(name=row[1], value=row[2], inline=False)
         embed.add_field(name=region_name + " (region " + str(region_id) + ")",
                         value=str(players_nb) + " players", inline=False)
-    embed.set_footer(text='---------------------------\n'+str(total)+' players on MKW')
+    embed.set_footer(text='------------------------------------------------------\n'
+        + str(total)+' players on MKW.\nBot used by ' + str(guilds_count) + " servers.")
     await ctx.send(embed=embed)
 
 
@@ -710,6 +712,8 @@ async def more(ctx):
 @client.event
 async def on_ready():
     # v2_to_v3_json_conv()
+    global guilds_count
+    guilds_count = len(client.guilds)
 
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
@@ -718,7 +722,6 @@ async def on_ready():
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
 
-    print("This bot is connected to " + str(len(client.guilds)) + " Discord guilds.")
     print("on_ready() as been used, must be a reconnection to Discord, or maybe you rebooted/restarted the bot ?")
     #     notification_subscribers_dict = {}
     #
