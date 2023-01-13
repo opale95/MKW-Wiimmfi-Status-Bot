@@ -25,19 +25,7 @@ JSON_API_URL = "https://wiimmfi.de/stats/mkwx?m=json"
 REGIONS_HTML = "regions.html"
 CUSTOM_REGIONS_HTML = "custom_regions.html"
 
-HIDDEN_REGIONS = {-9: "Private rooms",
-                  99999: "World Wide (Battle)",
-                  200027: "CTGP v1.03 (Count down)",
-                  200028: "CTGP v1.03 (Count down)",
-                  200033: "CTGP v1.03 (Count down)",
-                  200040: "CTGP v1.03 (Count down)",
-                  200046: "CTGP v1.03 (Count down)",
-                  200047: "CTGP v1.03 (Count down)",
-                  200052: "CTGP v1.03 (Count down)",
-                  200059: "CTGP v1.03 (Count down)",
-                  100501: "Bob-omb Blast Revolution",
-                  100210: "Mario Kart Wii Deluxe v6.0 (Battle)",
-                  200037: "CTGP v1.03 (Count down)"}
+HIDDEN_REGIONS = {-9: "Private rooms"}
 
 player_count_table = {}
 regions_list = None
@@ -136,16 +124,19 @@ def get_regions_list():
     """"""
     # regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = pd.read_html(io=REGIONS_HTML, match="Versus Race Regions of Mario Kart Wii")[0]
-    regions = regions.iloc[:8, [0, 3]]
+    regions = regions.iloc[:6, [0, 3]]
     regions.columns = ["ID", "Name"]
     regions = regions.astype(str)
+    regions['vs']='✓'
+    regions['bt']='✓'
+    regions['cd']='—'
 
     # custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
-    custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region")[0]
-    #custom.drop(custom[custom[0] == "Region"].index, inplace=True)
+    custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region", encoding='utf8')[0]
+    custom.drop(custom[custom[0] == "Region"].index, inplace=True)
     #custom = custom[[0, 2]]
-    custom = custom.iloc[0:,[0,2]]
-    custom.columns = ["ID", "Name"]
+    custom = custom.iloc[0:,[0,2,3,4,5]]
+    custom.columns = ["ID", "Name", "vs", "bt", "cd"]
     custom = custom.astype(str)
 
     return pd.concat([regions, custom])
@@ -218,6 +209,11 @@ async def region(ctx, search: str):
             embed.add_field(name=results[region_id], value=region_id)
         for row in filtered_list.itertuples():
             embed.add_field(name=row[2], value=row[1])
+            if row[4]=='✓':
+                embed.add_field(name=row[2]+' (Battle)', value=str(int(row[1])+100000))
+            if row[5]=='✓':
+                embed.add_field(name=row[2]+' (Countdown)', value=str(int(row[1])+200000))
+                
     await ctx.send(embed=embed)
 
 
