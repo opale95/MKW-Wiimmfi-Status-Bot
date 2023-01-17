@@ -122,14 +122,15 @@ def get_player_count_json():
 
 def get_regions_list():
     """"""
+    new_columns = ["ID", "Name"]
     # regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = pd.read_html(io=REGIONS_HTML, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = regions.iloc[:6, [0, 3]]
     regions.columns = ["ID", "Name"]
     regions = regions.astype(str)
-    regions['vs']='✓'
-    regions['bt']='✓'
-    regions['cd']='—'
+    #regions['vs']='✓'
+    #regions['bt']='✓'
+    #regions['cd']='—'
 
     # custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
     custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region", encoding='utf8')[0]
@@ -137,6 +138,16 @@ def get_regions_list():
     #custom = custom[[0, 2]]
     custom = custom.iloc[0:,[0,2,3,4,5]]
     custom.columns = ["ID", "Name", "vs", "bt", "cd"]
+
+    update_list = []
+    rows = custom.itertuples()
+    for row in rows:
+        if row.bt == '✓':
+            update_list.append([str(int(row.ID)+100000), row.Name])
+        if row.cd == '✓':
+            update_list.append([str(int(row.ID)+200000), row.Name])
+    update_df = pd.DataFrame(update_list, columns=)
+
     custom = custom.astype(str)
 
     return pd.concat([regions, custom])
