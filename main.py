@@ -27,6 +27,9 @@ CUSTOM_REGIONS_HTML = "custom_regions.html"
 
 HIDDEN_REGIONS = {-9: "Private rooms"}
 
+BATTLE_ID_BASE = 100000
+COUNTDOWN_ID_BASE = 200000
+
 player_count_table = {}
 regions_list = None
 player_count_dict = {}
@@ -140,9 +143,9 @@ def get_regions_list():
     rows = custom.itertuples()
     for row in rows:
         if row.bt == '✓':
-            update_list.append([str(int(row.ID)+100000), row.Name+' (Battle)'])
+            update_list.append([str(int(row.ID)+BATTLE_ID_BASE), row.Name+' (Battle)'])
         if row.cd == '✓':
-            update_list.append([str(int(row.ID)+200000), row.Name+' (Countdown)'])
+            update_list.append([str(int(row.ID)+COUNTDOWN_ID_BASE), row.Name+' (Countdown)'])
     update_df = pd.DataFrame(update_list, columns=new_columns)
     custom = pd.concat([custom, update_df])
     custom = custom.astype(str)
