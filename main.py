@@ -126,11 +126,8 @@ def get_regions_list():
     # regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = pd.read_html(io=REGIONS_HTML, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = regions.iloc[:6, [0, 3]]
-    regions.columns = ["ID", "Name"]
+    regions.columns = new_columns
     regions = regions.astype(str)
-    #regions['vs']='✓'
-    #regions['bt']='✓'
-    #regions['cd']='—'
 
     # custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
     custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region", encoding='utf8')[0]
@@ -143,11 +140,11 @@ def get_regions_list():
     rows = custom.itertuples()
     for row in rows:
         if row.bt == '✓':
-            update_list.append([str(int(row.ID)+100000), row.Name])
+            update_list.append([str(int(row.ID)+100000), row.Name+' (Battle)'])
         if row.cd == '✓':
-            update_list.append([str(int(row.ID)+200000), row.Name])
-    update_df = pd.DataFrame(update_list, columns=)
-
+            update_list.append([str(int(row.ID)+200000), row.Name+' (Countdown)'])
+    update_df = pd.DataFrame(update_list, columns=new_columns)
+    custom = pd.concat([custom, update_df])
     custom = custom.astype(str)
 
     return pd.concat([regions, custom])
@@ -220,10 +217,6 @@ async def region(ctx, search: str):
             embed.add_field(name=results[region_id], value=region_id)
         for row in filtered_list.itertuples():
             embed.add_field(name=row[2], value=row[1])
-            if row[4]=='✓':
-                embed.add_field(name=row[2]+' (Battle)', value=str(int(row[1])+100000))
-            if row[5]=='✓':
-                embed.add_field(name=row[2]+' (Countdown)', value=str(int(row[1])+200000))
                 
     await ctx.send(embed=embed)
 
