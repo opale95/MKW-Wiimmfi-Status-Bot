@@ -138,19 +138,22 @@ def get_regions_list():
     #custom = custom[[0, 2]]
     custom = custom.iloc[0:,[0,2,3,4,5]]
     custom.columns = ["ID", "Name", "vs", "bt", "cd"]
+    custom = custom.astype(str)
 
-    update_list = []
+    updated_list = []
+    rows = regions.itertuples()
+    for row in rows:
+        updated_list.append([row.ID, row.Name])
+        updated_list.append([str(int(row.ID)+BATTLE_ID_BASE), row.Name+' (Battle)'])
+
     rows = custom.itertuples()
     for row in rows:
         if row.bt == '✓':
-            update_list.append([str(int(row.ID)+BATTLE_ID_BASE), row.Name+' (Battle)'])
+            updated_list.append([str(int(row.ID)+BATTLE_ID_BASE), row.Name+' (Battle)'])
         if row.cd == '✓':
-            update_list.append([str(int(row.ID)+COUNTDOWN_ID_BASE), row.Name+' (Countdown)'])
-    update_df = pd.DataFrame(update_list, columns=new_columns)
-    custom = pd.concat([custom, update_df])
-    custom = custom.astype(str)
+            updated_list.append([str(int(row.ID)+COUNTDOWN_ID_BASE), row.Name+' (Countdown)'])
 
-    return pd.concat([regions, custom])
+    return pd.DataFrame(updated_list, columns=new_columns)
     # return regions.append(custom)
 
 
