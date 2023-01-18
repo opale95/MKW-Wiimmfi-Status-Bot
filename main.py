@@ -153,7 +153,9 @@ def get_regions_list():
         if row.cd == '✓':
             updated_list.append([str(int(row.ID)+COUNTDOWN_ID_BASE), row.Name+' (Countdown)'])
 
-    return pd.DataFrame(updated_list, columns=new_columns)
+    custom.drop(columns=["vs", "bt", "cd"])
+
+    return pd.concat([custom, pd.DataFrame(updated_list, columns=new_columns)])
     # return regions.append(custom)
 
 
