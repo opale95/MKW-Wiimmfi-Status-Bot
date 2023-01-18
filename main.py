@@ -25,19 +25,10 @@ JSON_API_URL = "https://wiimmfi.de/stats/mkwx?m=json"
 REGIONS_HTML = "regions.html"
 CUSTOM_REGIONS_HTML = "custom_regions.html"
 
-HIDDEN_REGIONS = {-9: "Private rooms",
-                  99999: "World Wide (Battle)",
-                  200027: "CTGP v1.03 (Count down)",
-                  200028: "CTGP v1.03 (Count down)",
-                  200033: "CTGP v1.03 (Count down)",
-                  200040: "CTGP v1.03 (Count down)",
-                  200046: "CTGP v1.03 (Count down)",
-                  200047: "CTGP v1.03 (Count down)",
-                  200052: "CTGP v1.03 (Count down)",
-                  200059: "CTGP v1.03 (Count down)",
-                  100501: "Bob-omb Blast Revolution",
-                  100210: "Mario Kart Wii Deluxe v6.0 (Battle)",
-                  200037: "CTGP v1.03 (Count down)"}
+HIDDEN_REGIONS = {-9: "Private rooms"}
+
+BATTLE_ID_BASE = 100000
+COUNTDOWN_ID_BASE = 200000
 
 player_count_table = {}
 regions_list = None
@@ -134,21 +125,35 @@ def get_player_count_json():
 
 def get_regions_list():
     """"""
+    new_columns = ["ID", "Name"]
     # regions = pd.read_html(io=REGIONS_URL, match="Versus Race Regions of Mario Kart Wii")[0]
     regions = pd.read_html(io=REGIONS_HTML, match="Versus Race Regions of Mario Kart Wii")[0]
-    regions = regions.iloc[:8, [0, 3]]
-    regions.columns = ["ID", "Name"]
+    regions = regions.iloc[:6, [0, 3]]
+    regions.columns = new_columns
     regions = regions.astype(str)
 
     # custom = pd.read_html(io=CUSTOM_REGIONS_URL, match="Name of region")[0]
-    custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region")[0]
-    #custom.drop(custom[custom[0] == "Region"].index, inplace=True)
+    custom = pd.read_html(io=CUSTOM_REGIONS_HTML, match="Name of region", encoding='utf8')[0]
+    custom.drop(custom[custom[0] == "Region"].index, inplace=True)
     #custom = custom[[0, 2]]
-    custom = custom.iloc[0:,[0,2]]
-    custom.columns = ["ID", "Name"]
+    custom = custom.iloc[0:,[0,2,3,4,5]]
+    custom.columns = ["ID", "Name", "vs", "bt", "cd"]
     custom = custom.astype(str)
 
-    return pd.concat([regions, custom])
+    updated_list = []
+    rows = regions.itertuples()
+    for row in rows:
+        updated_list.append([row.ID, row.Name])
+        updated_list.append([str(int(row.ID)+BATTLE_ID_BASE), row.Name+' (Battle)'])
+
+    rows = custom.itertuples()
+    for row in rows:
+        if row.bt == '✓':
+            updated_list.append([str(int(row.ID)+BATTLE_ID_BASE), row.Name+' (Battle)'])
+        if row.cd == '✓':
+            updated_list.append([str(int(row.ID)+COUNTDOWN_ID_BASE), row.Name+' (Countdown)'])
+
+    return pd.DataFrame(updated_list, columns=new_columns)
     # return regions.append(custom)
 
 
@@ -218,6 +223,7 @@ async def region(ctx, search: str):
             embed.add_field(name=results[region_id], value=region_id)
         for row in filtered_list.itertuples():
             embed.add_field(name=row[2], value=row[1])
+                
     await ctx.send(embed=embed)
 
 
