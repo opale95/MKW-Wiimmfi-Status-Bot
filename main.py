@@ -198,7 +198,7 @@ async def invite(ctx):
     """Command that returns an invitation link."""
     await ctx.send(
         "I'd be glad to join your server ! Invite me by clicking on this "
-        "link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=257089")
+        "link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=2147707905")
 
 
 @client.command()
@@ -570,6 +570,19 @@ async def check():
     player_count_dict.clear()
     player_count_dict = new_dict
 
+def is_request(message):
+    """"""
+    return message.author != client.user and PREFIX in message.content
+
+def is_1p(message):
+    """"""
+    return message.author == client.user \
+        and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in ["Someone", "players: 1"])
+
+def is_bot(message):
+    """"""
+    return message.author == client.user
+
 
 @client.command()
 async def clear(ctx, *args):
@@ -596,27 +609,44 @@ async def clear(ctx, *args):
     else:
         clean_message = await ctx.send(
             "I will remove all previous messages i sent in this channel, it will take some time !")
-    read = 0
-    found = 0
-    messages = await ctx.history(before=clean_message).flatten()
-    while len(messages) > 0:
-        for message in messages:
-            read = read + 1
-            if (users and message.author != client.user and PREFIX in message.content) \
-                    or (_1p and message.author == client.user
-                        and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in
-                                ["Someone", "players: 1"])) \
-                    or (not (users or _1p) and message.author == client.user):
-                found = found + 1
-                try:
-                    await message.delete()
-                except (discord.Forbidden, discord.NotFound) as error:
-                    print("ERROR: ", error.text, "\nCHANNEL_ID: ", message.channel.id)
-        messages = await ctx.history(before=messages[len(messages) - 1]).flatten()
-    await clean_message.edit(
-        content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
-                + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
-    await ctx.message.delete(delay=300.0)
+    
+    # read = 0
+    # found = 0
+    # messages = await ctx.history(before=clean_message).flatten()
+    # while len(messages) > 0:
+    #     for message in messages:
+    #         read = read + 1
+    #         if (users and message.author != client.user and PREFIX in message.content) \
+    #                 or (_1p and message.author == client.user
+    #                     and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in
+    #                             ["Someone", "players: 1"])) \
+    #                 or (not (users or _1p) and message.author == client.user):
+    #             found = found + 1
+    #             try:
+    #                 await message.delete()
+    #             except (discord.Forbidden, discord.NotFound) as error:
+    #                 print("ERROR: ", error.text, "\nCHANNEL_ID: ", message.channel.id)
+    #     messages = await ctx.history(before=messages[len(messages) - 1]).flatten()
+    # await clean_message.edit(
+    #     content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
+    #             + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
+    limit = 50
+    try:
+        if users:
+            deleted = await ctx.channel.purge(check=is_request, limit=limit, before=clean_message)
+        elif _1p:
+            deleted = await ctx.channel.purge(check=is_1p, limit=limit, before=clean_message)
+        else:
+            deleted = await ctx.channel.purge(check=is_bot, limit=limit, before=clean_message)
+
+        await clean_message.edit(
+            content="Cleaning done ! I deleted " + str(len(deleted))
+                    + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
+
+        await ctx.message.delete(delay=300.0)
+
+    except (discord.Forbidden, discord.NotFound) as error:
+        print("ERROR: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 
 def v2_to_v3_json_conv():
