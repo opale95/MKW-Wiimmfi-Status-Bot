@@ -587,9 +587,12 @@ def is_bot(message):
 @client.command()
 async def clear(ctx, *args):
     """"""
-    if ctx.channel.type != discord.ChannelType.private and not ctx.author.permissions_in(ctx.channel).manage_channels:
-        await ctx.send(
-            "You have not the right to manage this channel.")
+    limit = 25
+    if ctx.channel.type == discord.ChannelType.private:
+        await ctx.send("You can't use this command in private channels.")
+        return
+    elif not ctx.author.permissions_in(ctx.channel).manage_channels:
+        await ctx.send("You have not the right to manage this channel.")
         return
     if len(args) > 1 or (len(args) == 1 and args[0] not in ("users", "1")):
         await ctx.send("clear command usage: ```mkw:clear``` or ```mkw:clear users``` or ```mkw:clear 1```")
@@ -601,15 +604,15 @@ async def clear(ctx, *args):
             await ctx.send("I can't remove other messages than mine in a Private Message channel.")
             return
         clean_message = await ctx.send(
-            "I will remove all previous command requests users sent in this channel, it will take some time !")
+            "I will remove the " + str(limit) + " previous command requests users sent in this channel, it will take some time !")
     elif _1p:
         clean_message = await ctx.send(
-            "All previous messages about one player joining then leaving a region will be removed, it will take some "
+            "The " + str(limit) + " previous messages about one player joining then leaving a region will be removed, it will take some "
             "time !")
     else:
         clean_message = await ctx.send(
-            "I will remove all previous messages i sent in this channel, it will take some time !")
-    
+            "I will remove the " + str(limit) + " previous messages i sent in this channel, it will take some time !")
+
     # read = 0
     # found = 0
     # messages = await ctx.history(before=clean_message).flatten()
@@ -630,7 +633,6 @@ async def clear(ctx, *args):
     # await clean_message.edit(
     #     content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
     #             + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
-    limit = 50
     try:
         if users:
             deleted = await ctx.channel.purge(check=is_request, limit=limit, before=clean_message)
