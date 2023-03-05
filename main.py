@@ -37,11 +37,13 @@ player_count_dict = {}
 intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
+intents.message_content = True
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
+
 guilds_count = 0
 
 
-@bot.command()
+@bot.hybrid_command()
 async def ping(ctx):
     """Returns the bot's latency in milliseconds."""
     await ctx.send(f'Pong! {round(bot.latency * 1000)}ms ')
@@ -50,7 +52,7 @@ async def ping(ctx):
 bot.remove_command('help')
 
 
-@bot.command(pass_context=True)
+@bot.hybrid_command(pass_context=True)
 async def help(ctx):
     """Help command that returns an embedded list and details of commands, and some additional information."""
     embed = discord.Embed(colour=discord.Colour.green())
@@ -171,7 +173,7 @@ def get_region_name(region_id):
     return ""
 
 
-@bot.command()
+@bot.hybrid_command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
     global player_count_table
@@ -193,7 +195,7 @@ async def status(ctx):
     await ctx.send(embed=embed)
 
 
-@bot.command()
+@bot.hybrid_command()
 async def invite(ctx):
     """Command that returns an invitation link."""
     await ctx.send(
@@ -201,7 +203,7 @@ async def invite(ctx):
         "link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=2147707905")
 
 
-@bot.command()
+@bot.hybrid_command()
 async def region(ctx, search: str):
     """Command to search regions ID's by name."""
     global regions_list
@@ -225,7 +227,7 @@ async def region(ctx, search: str):
             embed.add_field(name=results[region_id], value=region_id)
         for row in filtered_list.itertuples():
             embed.add_field(name=row[2], value=row[1])
-                
+
     await ctx.send(embed=embed)
 
 
@@ -674,7 +676,7 @@ def v2_to_v3_json_conv():
                 print("JSON is already OK")
 
 
-@bot.command()
+@bot.hybrid_command()
 async def less(ctx, delay="15"):
     """"""
     private = ctx.channel.type == discord.ChannelType.private
@@ -715,7 +717,7 @@ async def less(ctx, delay="15"):
         " minutes.")
 
 
-@bot.command()
+@bot.hybrid_command()
 async def more(ctx):
     """"""
     private = ctx.channel.type == discord.ChannelType.private
@@ -779,6 +781,7 @@ async def on_ready():
     #         print("client.get_channel() and client.get_user() both returned None. RECIPIENT_ID: " + recipient_id)
 
     if not check.is_running():
+        await bot.tree.sync()
         check.start()
 
 
