@@ -64,7 +64,7 @@ async def help(ctx):
                     value='Subscribe yourself to receive DM or the current channel (if you own the Manage Channels '
                           'rights) to be notified to regions events.\nExample: mkw:sub 870 or mkw:sub channel 870',
                     inline=False)
-    embed.add_field(name='mkw:unsub REGION_ID|all or mkw:unsub REGION_ID|all',
+    embed.add_field(name='mkw:unsub REGION_ID|all or mkw:unsub channel REGION_ID|all',
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to '
                           'regions events notifications.\n '
                           'Example: mkw:unsub all or mkw:unsub 870 or mkw:unsub channel all or mkw:unsub channel 870',
@@ -307,7 +307,7 @@ async def unsubscribe(ctx, *args):
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of unsub command: " + PREFIX + "unsub REGION_ID or " + PREFIX + "sub channel REGION_ID")
+            "Error. Usage of unsub command: " + PREFIX + "unsub REGION_ID or " + PREFIX + "unsub channel REGION_ID")
         return
 
     try:
