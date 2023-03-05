@@ -37,20 +37,20 @@ player_count_dict = {}
 intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
-client = commands.Bot(command_prefix=PREFIX, intents=intents)
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 guilds_count = 0
 
 
-@client.command()
+@bot.command()
 async def ping(ctx):
     """Returns the bot's latency in milliseconds."""
-    await ctx.send(f'Pong! {round(client.latency * 1000)}ms ')
+    await ctx.send(f'Pong! {round(bot.latency * 1000)}ms ')
 
 
-client.remove_command('help')
+bot.remove_command('help')
 
 
-@client.command(pass_context=True)
+@bot.command(pass_context=True)
 async def help(ctx):
     """Help command that returns an embedded list and details of commands, and some additional information."""
     embed = discord.Embed(colour=discord.Colour.green())
@@ -171,7 +171,7 @@ def get_region_name(region_id):
     return ""
 
 
-@client.command()
+@bot.command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
     global player_count_table
@@ -193,7 +193,7 @@ async def status(ctx):
     await ctx.send(embed=embed)
 
 
-@client.command()
+@bot.command()
 async def invite(ctx):
     """Command that returns an invitation link."""
     await ctx.send(
@@ -201,7 +201,7 @@ async def invite(ctx):
         "link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=2147707905")
 
 
-@client.command()
+@bot.command()
 async def region(ctx, search: str):
     """Command to search regions ID's by name."""
     global regions_list
@@ -229,7 +229,7 @@ async def region(ctx, search: str):
     await ctx.send(embed=embed)
 
 
-@client.command(name='subscribe', aliases=['sub'])
+@bot.command(name='subscribe', aliases=['sub'])
 async def subscribe(ctx, *args):
     """"""
     text_channel = len(args) == 2 and args[0] == "channel"
@@ -289,7 +289,7 @@ async def subscribe(ctx, *args):
                          "```mkw:region word_to_search```")
 
 
-@client.command(name='unsubscribe', aliases=['unsub'])
+@bot.command(name='unsubscribe', aliases=['unsub'])
 async def unsubscribe(ctx, *args):
     """"""
     text_channel = len(args) == 2 and args[0] == "channel"
@@ -350,7 +350,7 @@ async def unsubscribe(ctx, *args):
         json.dump(notification_subscribers_dict, notification_subscribers_json)
 
 
-@client.command(name='subscriptions', aliases=['subs'])
+@bot.command(name='subscriptions', aliases=['subs'])
 async def subscriptions(ctx, *args):
     """"""
     text_channel = len(args) == 1 and args[0] == "channel"
@@ -408,7 +408,7 @@ async def bot_activity(table):
         players_total += table[region_id]
     activity = discord.Activity(name='%d people playing Mario Kart Wii online.' % players_total,
                                 type=discord.ActivityType.watching)
-    await client.change_presence(activity=activity)
+    await bot.change_presence(activity=activity)
 
 
 # async def notify(region_desc, message_content, messages):
@@ -467,9 +467,9 @@ async def notify(region_id, notification_content, messages):
     to_delete = []
     for recipient_id in notification_subscribers_dict:
         if str(region_id) in notification_subscribers_dict[recipient_id]["regions"]:
-            recipient = client.get_user(int(recipient_id))
+            recipient = bot.get_user(int(recipient_id))
             if recipient is None:
-                recipient = client.get_channel(int(recipient_id))
+                recipient = bot.get_channel(int(recipient_id))
                 if recipient:
                     channel_id = recipient.id
                 else:
@@ -572,19 +572,19 @@ async def check():
 
 def is_request(message):
     """"""
-    return message.author != client.user and PREFIX in message.content
+    return message.author != bot.user and PREFIX in message.content
 
 def is_1p(message):
     """"""
-    return message.author == client.user \
+    return message.author == bot.user \
         and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in ["Someone", "players: 1"])
 
 def is_bot(message):
     """"""
-    return message.author == client.user
+    return message.author == bot.user
 
 
-@client.command()
+@bot.command()
 async def clear(ctx, *args):
     """"""
     limit = 25
@@ -674,7 +674,7 @@ def v2_to_v3_json_conv():
                 print("JSON is already OK")
 
 
-@client.command()
+@bot.command()
 async def less(ctx, delay="15"):
     """"""
     private = ctx.channel.type == discord.ChannelType.private
@@ -715,7 +715,7 @@ async def less(ctx, delay="15"):
         " minutes.")
 
 
-@client.command()
+@bot.command()
 async def more(ctx):
     """"""
     private = ctx.channel.type == discord.ChannelType.private
@@ -749,11 +749,11 @@ async def more(ctx):
     await ctx.send("From now on, notifications about a player joining then leaving a region won't be deleted.")
 
 
-@client.event
+@bot.event
 async def on_ready():
     # v2_to_v3_json_conv()
     global guilds_count
-    guilds_count = len(client.guilds)
+    guilds_count = len(bot.guilds)
 
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
@@ -782,7 +782,7 @@ async def on_ready():
         check.start()
 
 
-@client.event
+@bot.event
 async def on_command_error(ctx, error):
     try:
         await ctx.send(f'Error. Try mkw:help ({error})')
@@ -790,4 +790,4 @@ async def on_command_error(ctx, error):
         print("Forbidden: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 
-client.run(TOKEN)
+bot.run(TOKEN)
