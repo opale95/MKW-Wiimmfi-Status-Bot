@@ -1,0 +1,44 @@
+Terms of Service
+
+1. Acceptance of Terms
+By using the MKW-Wiimmfi-Status-Bot ("the bot"), you agree to be bound by these Terms of Service ("Terms"),
+	and also by Discord, Inc Terms of Service (https://discord.com/terms).
+If you do not agree to these Terms, do not use the bot.
+
+2. Description of the Bot
+The bot provides information on the current number of players in game on the Mario Kart Wii online service hosted on Wiimmfi.
+It provides such information either when requested by a user with a text command or to subscribed users that asked with another command to be notified.
+
+3. Use of the Bot
+The bot is provided free of charge, but we reserve the right to restrict or terminate access to the bot at any time,
+	without notice.
+We may also modify or update the bot at any time, without notice.
+You may use the bot only for its intended purpose and in compliance with these Terms and all applicable laws.
+
+4. Privacy
+The bot only collects Discord Channels or Users ID's in order to send them notifications when they asked the bot to be notified.
+Those ID's are a publicly available number to any user of the Discord app/website.
+As soon as the user asks the bot to stop sending notifications (with the appropriate command),
+	its user ID is deleted from its database.
+If, for any reason, you were unable to unsubscribe to such notifications,
+feel free to contact us (opale95) so taht we remove your ID from our database.
+
+5. Disclaimer of Warranties
+The bot is provided "as is" and without warranty of any kind,
+	whether express or implied, including but not limited to the warranties of merchantability,
+		fitness for a particular purpose, and non-infringement.
+We do not guarantee that the bot will be error-free or that access to the bot will be uninterrupted.
+
+6. Limitation of Liability
+To the maximum extent permitted by law, we will not be liable for any direct, indirect, incidental, special, consequential, or exemplary damages,
+	including but not limited to damages for loss of profits, goodwill, use, data, or other intangible losses resulting from the use or inability to use the bot.
+
+7. Changes to the Terms
+We reserve the right to modify these Terms at any time, without notice.
+Your continued use of the bot after any such changes will constitute your acceptance of the new Terms.
+
+8. Governing Law
+These Terms will be governed by and construed in accordance with the laws of France.
+Any disputes arising under or in connection with these Terms will be subject to the exclusive jurisdiction of the courts of France.
+
+By using the bot, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree to these Terms, please refrain from using the bot.
