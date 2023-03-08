@@ -21,7 +21,7 @@ Those ID's are a publicly available number to any user of the Discord app/websit
 As soon as the user asks the bot to stop sending notifications (with the appropriate command),
 	its user ID is deleted from its database.
 If, for any reason, you were unable to unsubscribe to such notifications,
-feel free to contact us (opale95) so taht we remove your ID from our database.
+	feel free to contact us (opale95|antoinewright95@gmail.com) so that we remove your ID from our database.
 
 5. Disclaimer of Warranties
 The bot is provided "as is" and without warranty of any kind,

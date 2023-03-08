@@ -1,0 +1,8 @@
+Privacy Policy
+
+The MKW-Wiimmfi-Status-Bot only collects Discord Channels or Users ID's in order to send them notifications when they asked the bot to be notified.
+Those ID's are a publicly available number to any user of the Discord app/website.
+As soon as the user asks the bot to stop sending notifications (with the appropriate command),
+	its user ID is deleted from its database.
+If, for any reason, you were unable to unsubscribe to such notifications,
+	feel free to contact us (opale95|antoinewright95@gmail.com) so that we remove your ID from our database.
