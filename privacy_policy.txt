@@ -7,4 +7,4 @@ As soon as the user asks the bot to stop sending notifications (with the appropr
 	or the user blocked the bot or removed it from their server),
 	its user ID is deleted from its database.
 If, for any reason, you were unable to unsubscribe to such notifications,
-	feel free to contact us (opale95|antoinewright95@gmail.com) so that we remove your ID from our database.
+	feel free to contact us (Artesian Dream#9970 on Discord or by email to antoinewright95@gmail.com) so that we remove your ID from our database.
