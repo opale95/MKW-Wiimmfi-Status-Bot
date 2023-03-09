@@ -231,25 +231,22 @@ async def region(ctx, search: str):
     await ctx.send(embed=embed)
 
 
-@bot.command(name='subscribe', aliases=['sub'])
-async def subscribe(ctx, *args):
-    """"""
-    text_channel = len(args) == 2 and args[0] == "channel"
-    if text_channel:
+@bot.hybrid_command(name='subscribe', aliases=['sub'])
+async def subscribe(ctx, channel_type, region_id):
+    """Command to request to be notified by the bot when players are online in a specific region."""
+    if channel_type == "channel":
         if ctx.author.permissions_in(ctx.channel).manage_channels:
-            region_id = args[1]
             recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel. You can subscribe to be notified in Direct Message "
-                "with the " + PREFIX + "sub REGION_ID command.")
+                "with the " + PREFIX + "sub dm REGION_ID command.")
             return
-    elif len(args) == 1:
-        region_id = args[0]
+    elif channel_type == "dm":
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of sub command: " + PREFIX + "sub REGION_ID or " + PREFIX + "sub channel REGION_ID")
+            "Error. Usage of sub command: " + PREFIX + "sub dm REGION_ID or " + PREFIX + "sub channel REGION_ID")
         return
 
     global regions_list
@@ -263,7 +260,7 @@ async def subscribe(ctx, *args):
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
                 json.dump({}, new_file)
             notification_subscribers_dict = {}
-        if text_channel:
+        if channel_type == "channel":
             subscriber_id = str(ctx.channel.id)
         else:
             subscriber_id = str(ctx.author.id)
@@ -291,25 +288,22 @@ async def subscribe(ctx, *args):
                          "```mkw:region word_to_search```")
 
 
-@bot.command(name='unsubscribe', aliases=['unsub'])
-async def unsubscribe(ctx, *args):
-    """"""
-    text_channel = len(args) == 2 and args[0] == "channel"
-    if text_channel:
+@bot.hybrid_command(name='unsubscribe', aliases=['unsub'])
+async def unsubscribe(ctx, channel_type, region_id):
+    """Command to request to not be notified anymore by the bot."""
+    if channel_type == "channel":
         if ctx.author.permissions_in(ctx.channel).manage_channels:
-            region_id = args[1]
             recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel. You can unsubscribe to be notified in Direct Message "
-                "with the " + PREFIX + "unsub REGION_ID command.")
+                "with the " + PREFIX + "unsub dm REGION_ID command.")
             return
-    elif len(args) == 1:
-        region_id = args[0]
+    elif channel_type == "dm":
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of unsub command: " + PREFIX + "unsub REGION_ID or " + PREFIX + "unsub channel REGION_ID")
+            "Error. Usage of unsub command: " + PREFIX + "unsub dm REGION_ID or " + PREFIX + "unsub channel REGION_ID")
         return
 
     try:
@@ -320,7 +314,7 @@ async def unsubscribe(ctx, *args):
             json.dump({}, new_file)
         notification_subscribers_dict = {}
 
-    if text_channel:
+    if channel_type == "channel":
         subscriber_id = str(ctx.channel.id)
     else:
         subscriber_id = str(ctx.author.id)
@@ -352,22 +346,21 @@ async def unsubscribe(ctx, *args):
         json.dump(notification_subscribers_dict, notification_subscribers_json)
 
 
-@bot.command(name='subscriptions', aliases=['subs'])
-async def subscriptions(ctx, *args):
-    """"""
-    text_channel = len(args) == 1 and args[0] == "channel"
-    if text_channel:
+@bot.hybrid_command(name='subscriptions', aliases=['subs'])
+async def subscriptions(ctx, channel_type):
+    """Command to list the regions a user/channel has requested to be notified about."""
+    if channel_type == "channel":
         if ctx.author.permissions_in(ctx.channel).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel.")
             return
-    elif len(args) == 0:
+    elif channel_type == "dm":
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of subs command: " + PREFIX + "subs or " + PREFIX + "subs channel")
+            "Error. Usage of subs command: " + PREFIX + "subs dm or " + PREFIX + "subs channel")
         return
 
     try:
@@ -377,7 +370,7 @@ async def subscriptions(ctx, *args):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
         notification_subscribers_dict = {}
-    if text_channel:
+    if channel_type == "channel":
         subscriber_id = str(ctx.channel.id)
     else:
         subscriber_id = str(ctx.author.id)
@@ -586,8 +579,8 @@ def is_bot(message):
     return message.author == bot.user
 
 
-@bot.command()
-async def clear(ctx, *args):
+@bot.hybrid_command()
+async def clear(ctx, message_type):
     """"""
     limit = 25
     if ctx.channel.type == discord.ChannelType.private:
@@ -596,18 +589,16 @@ async def clear(ctx, *args):
     elif not ctx.author.permissions_in(ctx.channel).manage_channels:
         await ctx.send("You have not the right to manage this channel.")
         return
-    if len(args) > 1 or (len(args) == 1 and args[0] not in ("users", "1")):
-        await ctx.send("clear command usage: ```mkw:clear``` or ```mkw:clear users``` or ```mkw:clear 1```")
+    if message_type not in ("bot", "users", "1"):
+        await ctx.send("clear command usage: ```mkw:clear bot``` or ```mkw:clear users``` or ```mkw:clear 1```")
         return
-    users = args and args[0] == "users"
-    _1p = args and args[0] == "1"
-    if users:
+    if message_type == "users":
         if ctx.channel.type == discord.ChannelType.private:
             await ctx.send("I can't remove other messages than mine in a Private Message channel.")
             return
         clean_message = await ctx.send(
             "I will remove the " + str(limit) + " previous command requests users sent in this channel, it will take some time !")
-    elif _1p:
+    elif message_type == "1":
         clean_message = await ctx.send(
             "The " + str(limit) + " previous messages about one player joining then leaving a region will be removed, it will take some "
             "time !")
@@ -636,9 +627,9 @@ async def clear(ctx, *args):
     #     content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
     #             + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
     try:
-        if users:
+        if message_type == "users":
             deleted = await ctx.channel.purge(check=is_request, limit=limit, before=clean_message)
-        elif _1p:
+        elif message_type == "1":
             deleted = await ctx.channel.purge(check=is_1p, limit=limit, before=clean_message)
         else:
             deleted = await ctx.channel.purge(check=is_bot, limit=limit, before=clean_message)
