@@ -62,21 +62,21 @@ async def help(ctx):
     embed.add_field(name='mkw:region "MANY WORDS" or mkw:region WORD',
                     value="Search regions ID's by giving one or several words\nExample: mkw:region \"Mario Kart "
                           "Fusion\" or mkw:region fun", inline=False)
-    embed.add_field(name='mkw:sub REGION_ID or mkw:sub channel REGION_ID',
+    embed.add_field(name='mkw:sub dm REGION_ID or mkw:sub channel REGION_ID',
                     value='Subscribe yourself to receive DM or the current channel (if you own the Manage Channels '
-                          'rights) to be notified to regions events.\nExample: mkw:sub 870 or mkw:sub channel 870',
+                          'rights) to be notified to regions events.\nExample: mkw:sub dm 870 or mkw:sub channel 870',
                     inline=False)
-    embed.add_field(name='mkw:unsub REGION_ID|all or mkw:unsub channel REGION_ID|all',
+    embed.add_field(name='mkw:unsub dm REGION_ID|all or mkw:unsub channel REGION_ID|all',
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to '
                           'regions events notifications.\n '
-                          'Example: mkw:unsub all or mkw:unsub 870 or mkw:unsub channel all or mkw:unsub channel 870',
+                          'Example: mkw:unsub dm all or mkw:unsub dm 870 or mkw:unsub channel all or mkw:unsub channel 870',
                     inline=False)
-    embed.add_field(name='mkw:subs or mkw:subs channel', value='Returns the region list for which you or the current '
+    embed.add_field(name='mkw:subs dm or mkw:subs channel', value='Returns the region list for which you or the current '
                                                                'channel (if you own the Manage Channels rights) are '
                                                                'subscribed to.\n '
                                                                'Also shows after how many minutes "Someone joined a '
                                                                'room then left" messages are deleted."', inline=False)
-    embed.add_field(name='mkw:clear or mkw:clear users or mkw:clear 1',
+    embed.add_field(name='mkw:clear bot or mkw:clear users or mkw:clear 1',
                     value='Removes all the bot messages in the channel or the users command requests (the bot needs '
                           'Manage Messages permissions to delete users requests) or messages about someone who joined '
                           'then left.', inline=False)
@@ -235,7 +235,7 @@ async def region(ctx, search: str):
 async def subscribe(ctx, channel_type, region_id):
     """Command to request to be notified by the bot when players are online in a specific region."""
     if channel_type == "channel":
-        if ctx.author.permissions_in(ctx.channel).manage_channels:
+        if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
@@ -292,7 +292,7 @@ async def subscribe(ctx, channel_type, region_id):
 async def unsubscribe(ctx, channel_type, region_id):
     """Command to request to not be notified anymore by the bot."""
     if channel_type == "channel":
-        if ctx.author.permissions_in(ctx.channel).manage_channels:
+        if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
@@ -350,7 +350,7 @@ async def unsubscribe(ctx, channel_type, region_id):
 async def subscriptions(ctx, channel_type):
     """Command to list the regions a user/channel has requested to be notified about."""
     if channel_type == "channel":
-        if ctx.author.permissions_in(ctx.channel).manage_channels:
+        if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
@@ -565,14 +565,17 @@ async def check():
     player_count_dict.clear()
     player_count_dict = new_dict
 
+
 def is_request(message):
     """"""
     return message.author != bot.user and PREFIX in message.content
+
 
 def is_1p(message):
     """"""
     return message.author == bot.user \
         and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in ["Someone", "players: 1"])
+
 
 def is_bot(message):
     """"""
