@@ -49,6 +49,31 @@ async def ping(ctx):
     await ctx.send(f'Pong! {round(bot.latency * 1000)}ms ')
 
 
+@bot.hybrid_command()
+async def bot_message(ctx, token, message):
+    """"""
+    # print(str(ctx.author.id) + " | " + str(bot.owner_id))
+    # if ctx.author.id == bot.owner_id:
+    if token == TOKEN:
+        try:
+            with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+                notification_subscribers_dict = json.load(notification_subscribers_json)
+        except (FileNotFoundError, json.JSONDecodeError):
+            with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+                json.dump({}, new_file)
+        else:
+            for recipient_id in notification_subscribers_dict:
+                recipient = bot.get_user(int(recipient_id))
+                if recipient is None:
+                    recipient = bot.get_channel(int(recipient_id))
+                if recipient:
+                    await recipient.send(message)
+                else:
+                    await ctx.send("Can't send message.")
+    else:
+        await ctx.send("Wrong token.")
+
+
 bot.remove_command('help')
 
 
