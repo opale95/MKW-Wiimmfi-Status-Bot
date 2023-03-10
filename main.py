@@ -49,27 +49,29 @@ async def ping(ctx):
     await ctx.send(f'Pong! {round(bot.latency * 1000)}ms ')
 
 
-# @bot.hybrid_command()
-# async def bot_message(ctx, token, message):
-    # """"""
-    # # print(str(ctx.author.id) + " | " + str(bot.owner_id))
-    # # if ctx.author.id == bot.owner_id:
+@bot.hybrid_command()
+@commands.is_owner()
+async def bot_message(ctx,  message):
+    """Command that let the bot owner send info to subscribers."""
+    # print(str(ctx.author.id) + " | " + str(bot.owner_id))
+    # if ctx.author.id == bot.owner_id:
     # if token == TOKEN:
-        # try:
-            # with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-                # notification_subscribers_dict = json.load(notification_subscribers_json)
-        # except (FileNotFoundError, json.JSONDecodeError):
-            # with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
-                # json.dump({}, new_file)
-        # else:
-            # for recipient_id in notification_subscribers_dict:
-                # recipient = bot.get_user(int(recipient_id))
-                # if recipient is None:
-                    # recipient = bot.get_channel(int(recipient_id))
-                # if recipient:
-                    # await recipient.send(message)
-                # else:
-                    # await ctx.send("Can't send message.")
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+    else:
+        for recipient_id in notification_subscribers_dict:
+            count = 0
+            recipient = bot.get_user(int(recipient_id))
+            if recipient is None:
+                recipient = bot.get_channel(int(recipient_id))
+            if recipient:
+                await recipient.send(message)
+            else:
+                await ctx.send("Can't send message.")
     # else:
         # await ctx.send("Wrong token.")
 
@@ -79,9 +81,9 @@ bot.remove_command('help')
 
 @bot.hybrid_command(pass_context=True)
 async def help(ctx):
-    """Help command that returns an embedded list and details of commands, and some additional information."""
+    """Returns an embedded list and details of commands, and some additional information."""
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.set_author(name='Help : list of commands available')
+    embed.set_author(name='Help : list of commands available (You can substitute mkw: with /)')
     embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions.',
                     inline=False)
     embed.add_field(name='mkw:region "MANY WORDS" or mkw:region WORD',
@@ -222,7 +224,7 @@ async def status(ctx):
 
 @bot.hybrid_command()
 async def invite(ctx):
-    """Command that returns an invitation link."""
+    """Returns an invitation link."""
     await ctx.send(
         "I'd be glad to join your server ! Invite me by clicking on this "
         "link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=2147707905")
@@ -230,7 +232,7 @@ async def invite(ctx):
 
 @bot.hybrid_command()
 async def region(ctx, search: str):
-    """Command to search regions ID's by name."""
+    """Search regions ID's by name."""
     global regions_list
     results = {}
 
@@ -258,7 +260,7 @@ async def region(ctx, search: str):
 
 @bot.hybrid_command(name='subscribe', aliases=['sub'])
 async def subscribe(ctx, channel_type, region_id):
-    """Command to request to be notified by the bot when players are online in a specific region."""
+    """Request to be notified by the bot when players are online in a specific region."""
     if channel_type == "channel":
         if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
@@ -315,7 +317,7 @@ async def subscribe(ctx, channel_type, region_id):
 
 @bot.hybrid_command(name='unsubscribe', aliases=['unsub'])
 async def unsubscribe(ctx, channel_type, region_id):
-    """Command to request to not be notified anymore by the bot."""
+    """Request to not be notified anymore by the bot."""
     if channel_type == "channel":
         if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
@@ -373,7 +375,7 @@ async def unsubscribe(ctx, channel_type, region_id):
 
 @bot.hybrid_command(name='subscriptions', aliases=['subs'])
 async def subscriptions(ctx, channel_type):
-    """Command to list the regions a user/channel has requested to be notified about."""
+    """List the regions a user/channel has requested to be notified about."""
     if channel_type == "channel":
         if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
@@ -609,7 +611,7 @@ def is_bot(message):
 
 @bot.hybrid_command()
 async def clear(ctx, message_type):
-    """"""
+    """Removes the 25 last bot/user request messages."""
     limit = 25
     if ctx.channel.type == discord.ChannelType.private:
         await ctx.send("You can't use this command in private channels.")
@@ -697,7 +699,7 @@ def v2_to_v3_json_conv():
 
 @bot.hybrid_command()
 async def less(ctx, delay="15"):
-    """"""
+    """Pick a time in minutes after which notifications about a single player are deleted."""
     private = ctx.channel.type == discord.ChannelType.private
     if not private and not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send(
@@ -738,7 +740,7 @@ async def less(ctx, delay="15"):
 
 @bot.hybrid_command()
 async def more(ctx):
-    """"""
+    """Message about a single player waiting for a game won't be deleted anymore."""
     private = ctx.channel.type == discord.ChannelType.private
     if not private and not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send(
@@ -783,7 +785,6 @@ async def on_ready():
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
 
-    print("on_ready() as been used, must be a reconnection to Discord, or maybe you rebooted/restarted the bot ?")
     #     notification_subscribers_dict = {}
     #
     # for recipient_id in notification_subscribers_dict:
