@@ -37,44 +37,73 @@ player_count_dict = {}
 intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
-client = commands.Bot(command_prefix=PREFIX, intents=intents)
+intents.message_content = True
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
+
 guilds_count = 0
 
 
-@client.command()
+@bot.hybrid_command()
 async def ping(ctx):
     """Returns the bot's latency in milliseconds."""
-    await ctx.send(f'Pong! {round(client.latency * 1000)}ms ')
+    await ctx.send(f'Pong! {round(bot.latency * 1000)}ms ')
 
 
-client.remove_command('help')
+@bot.hybrid_command()
+@commands.is_owner()
+async def bot_message(ctx,  message):
+    """Command that let the bot owner send info to subscribers."""
+    # print(str(ctx.author.id) + " | " + str(bot.owner_id))
+    # if ctx.author.id == bot.owner_id:
+    # if token == TOKEN:
+    try:
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
+            notification_subscribers_dict = json.load(notification_subscribers_json)
+    except (FileNotFoundError, json.JSONDecodeError):
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
+            json.dump({}, new_file)
+    else:
+        for recipient_id in notification_subscribers_dict:
+            count = 0
+            recipient = bot.get_user(int(recipient_id))
+            if recipient is None:
+                recipient = bot.get_channel(int(recipient_id))
+            if recipient:
+                await recipient.send(message)
+            else:
+                await ctx.send("Can't send message.")
+    # else:
+        # await ctx.send("Wrong token.")
 
 
-@client.command(pass_context=True)
+bot.remove_command('help')
+
+
+@bot.hybrid_command(pass_context=True)
 async def help(ctx):
-    """Help command that returns an embedded list and details of commands, and some additional information."""
+    """Returns an embedded list and details of commands, and some additional information."""
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.set_author(name='Help : list of commands available')
+    embed.set_author(name='Help : list of commands available (You can substitute mkw: with /)')
     embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions.',
                     inline=False)
     embed.add_field(name='mkw:region "MANY WORDS" or mkw:region WORD',
                     value="Search regions ID's by giving one or several words\nExample: mkw:region \"Mario Kart "
                           "Fusion\" or mkw:region fun", inline=False)
-    embed.add_field(name='mkw:sub REGION_ID or mkw:sub channel REGION_ID',
+    embed.add_field(name='mkw:sub dm REGION_ID or mkw:sub channel REGION_ID',
                     value='Subscribe yourself to receive DM or the current channel (if you own the Manage Channels '
-                          'rights) to be notified to regions events.\nExample: mkw:sub 870 or mkw:sub channel 870',
+                          'rights) to be notified to regions events.\nExample: mkw:sub dm 870 or mkw:sub channel 870',
                     inline=False)
-    embed.add_field(name='mkw:unsub REGION_ID|all or mkw:unsub channel REGION_ID|all',
+    embed.add_field(name='mkw:unsub dm REGION_ID|all or mkw:unsub channel REGION_ID|all',
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to '
                           'regions events notifications.\n '
-                          'Example: mkw:unsub all or mkw:unsub 870 or mkw:unsub channel all or mkw:unsub channel 870',
+                          'Example: mkw:unsub dm all or mkw:unsub dm 870 or mkw:unsub channel all or mkw:unsub channel 870',
                     inline=False)
-    embed.add_field(name='mkw:subs or mkw:subs channel', value='Returns the region list for which you or the current '
+    embed.add_field(name='mkw:subs dm or mkw:subs channel', value='Returns the region list for which you or the current '
                                                                'channel (if you own the Manage Channels rights) are '
                                                                'subscribed to.\n '
                                                                'Also shows after how many minutes "Someone joined a '
                                                                'room then left" messages are deleted."', inline=False)
-    embed.add_field(name='mkw:clear or mkw:clear users or mkw:clear 1',
+    embed.add_field(name='mkw:clear bot or mkw:clear users or mkw:clear 1',
                     value='Removes all the bot messages in the channel or the users command requests (the bot needs '
                           'Manage Messages permissions to delete users requests) or messages about someone who joined '
                           'then left.', inline=False)
@@ -171,7 +200,7 @@ def get_region_name(region_id):
     return ""
 
 
-@client.command()
+@bot.hybrid_command()
 async def status(ctx):
     """Bot's main command that returns the number of players online, in each game region."""
     global player_count_table
@@ -193,17 +222,17 @@ async def status(ctx):
     await ctx.send(embed=embed)
 
 
-@client.command()
+@bot.hybrid_command()
 async def invite(ctx):
-    """Command that returns an invitation link."""
+    """Returns an invitation link."""
     await ctx.send(
         "I'd be glad to join your server ! Invite me by clicking on this "
         "link:\nhttps://discord.com/oauth2/authorize?client_id=" + CLIENT_ID + "&scope=bot&permissions=2147707905")
 
 
-@client.command()
+@bot.hybrid_command()
 async def region(ctx, search: str):
-    """Command to search regions ID's by name."""
+    """Search regions ID's by name."""
     global regions_list
     results = {}
 
@@ -225,29 +254,26 @@ async def region(ctx, search: str):
             embed.add_field(name=results[region_id], value=region_id)
         for row in filtered_list.itertuples():
             embed.add_field(name=row[2], value=row[1])
-                
+
     await ctx.send(embed=embed)
 
 
-@client.command(name='subscribe', aliases=['sub'])
-async def subscribe(ctx, *args):
-    """"""
-    text_channel = len(args) == 2 and args[0] == "channel"
-    if text_channel:
-        if ctx.author.permissions_in(ctx.channel).manage_channels:
-            region_id = args[1]
+@bot.hybrid_command(name='subscribe', aliases=['sub'])
+async def subscribe(ctx, channel_type, region_id):
+    """Request to be notified by the bot when players are online in a specific region."""
+    if channel_type == "channel":
+        if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel. You can subscribe to be notified in Direct Message "
-                "with the " + PREFIX + "sub REGION_ID command.")
+                "with the " + PREFIX + "sub dm REGION_ID command.")
             return
-    elif len(args) == 1:
-        region_id = args[0]
+    elif channel_type == "dm":
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of sub command: " + PREFIX + "sub REGION_ID or " + PREFIX + "sub channel REGION_ID")
+            "Error. Usage of sub command: " + PREFIX + "sub dm REGION_ID or " + PREFIX + "sub channel REGION_ID")
         return
 
     global regions_list
@@ -261,7 +287,7 @@ async def subscribe(ctx, *args):
             with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
                 json.dump({}, new_file)
             notification_subscribers_dict = {}
-        if text_channel:
+        if channel_type == "channel":
             subscriber_id = str(ctx.channel.id)
         else:
             subscriber_id = str(ctx.author.id)
@@ -289,25 +315,22 @@ async def subscribe(ctx, *args):
                          "```mkw:region word_to_search```")
 
 
-@client.command(name='unsubscribe', aliases=['unsub'])
-async def unsubscribe(ctx, *args):
-    """"""
-    text_channel = len(args) == 2 and args[0] == "channel"
-    if text_channel:
-        if ctx.author.permissions_in(ctx.channel).manage_channels:
-            region_id = args[1]
+@bot.hybrid_command(name='unsubscribe', aliases=['unsub'])
+async def unsubscribe(ctx, channel_type, region_id):
+    """Request to not be notified anymore by the bot."""
+    if channel_type == "channel":
+        if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel. You can unsubscribe to be notified in Direct Message "
-                "with the " + PREFIX + "unsub REGION_ID command.")
+                "with the " + PREFIX + "unsub dm REGION_ID command.")
             return
-    elif len(args) == 1:
-        region_id = args[0]
+    elif channel_type == "dm":
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of unsub command: " + PREFIX + "unsub REGION_ID or " + PREFIX + "unsub channel REGION_ID")
+            "Error. Usage of unsub command: " + PREFIX + "unsub dm REGION_ID or " + PREFIX + "unsub channel REGION_ID")
         return
 
     try:
@@ -318,7 +341,7 @@ async def unsubscribe(ctx, *args):
             json.dump({}, new_file)
         notification_subscribers_dict = {}
 
-    if text_channel:
+    if channel_type == "channel":
         subscriber_id = str(ctx.channel.id)
     else:
         subscriber_id = str(ctx.author.id)
@@ -350,22 +373,21 @@ async def unsubscribe(ctx, *args):
         json.dump(notification_subscribers_dict, notification_subscribers_json)
 
 
-@client.command(name='subscriptions', aliases=['subs'])
-async def subscriptions(ctx, *args):
-    """"""
-    text_channel = len(args) == 1 and args[0] == "channel"
-    if text_channel:
-        if ctx.author.permissions_in(ctx.channel).manage_channels:
+@bot.hybrid_command(name='subscriptions', aliases=['subs'])
+async def subscriptions(ctx, channel_type):
+    """List the regions a user/channel has requested to be notified about."""
+    if channel_type == "channel":
+        if ctx.channel.permissions_for(ctx.author).manage_channels:
             recipient = "This channel"
         else:
             await ctx.send(
                 "You have not the right to manage this channel.")
             return
-    elif len(args) == 0:
+    elif channel_type == "dm":
         recipient = "You"
     else:
         await ctx.send(
-            "Error. Usage of subs command: " + PREFIX + "subs or " + PREFIX + "subs channel")
+            "Error. Usage of subs command: " + PREFIX + "subs dm or " + PREFIX + "subs channel")
         return
 
     try:
@@ -375,7 +397,7 @@ async def subscriptions(ctx, *args):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
         notification_subscribers_dict = {}
-    if text_channel:
+    if channel_type == "channel":
         subscriber_id = str(ctx.channel.id)
     else:
         subscriber_id = str(ctx.author.id)
@@ -408,7 +430,7 @@ async def bot_activity(table):
         players_total += table[region_id]
     activity = discord.Activity(name='%d people playing Mario Kart Wii online.' % players_total,
                                 type=discord.ActivityType.watching)
-    await client.change_presence(activity=activity)
+    await bot.change_presence(activity=activity)
 
 
 # async def notify(region_desc, message_content, messages):
@@ -467,9 +489,9 @@ async def notify(region_id, notification_content, messages):
     to_delete = []
     for recipient_id in notification_subscribers_dict:
         if str(region_id) in notification_subscribers_dict[recipient_id]["regions"]:
-            recipient = client.get_user(int(recipient_id))
+            recipient = bot.get_user(int(recipient_id))
             if recipient is None:
-                recipient = client.get_channel(int(recipient_id))
+                recipient = bot.get_channel(int(recipient_id))
                 if recipient:
                     channel_id = recipient.id
                 else:
@@ -570,42 +592,43 @@ async def check():
     player_count_dict.clear()
     player_count_dict = new_dict
 
+
 def is_request(message):
     """"""
-    return message.author != client.user and PREFIX in message.content
+    return message.author != bot.user and PREFIX in message.content
+
 
 def is_1p(message):
     """"""
-    return message.author == client.user \
+    return message.author == bot.user \
         and any(match in (message.embeds[0].fields[0].name if message.embeds else []) for match in ["Someone", "players: 1"])
+
 
 def is_bot(message):
     """"""
-    return message.author == client.user
+    return message.author == bot.user
 
 
-@client.command()
-async def clear(ctx, *args):
-    """"""
+@bot.hybrid_command()
+async def clear(ctx, message_type):
+    """Removes the 25 last bot/user request messages."""
     limit = 25
     if ctx.channel.type == discord.ChannelType.private:
         await ctx.send("You can't use this command in private channels.")
         return
-    elif not ctx.author.permissions_in(ctx.channel).manage_channels:
+    elif not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send("You have not the right to manage this channel.")
         return
-    if len(args) > 1 or (len(args) == 1 and args[0] not in ("users", "1")):
-        await ctx.send("clear command usage: ```mkw:clear``` or ```mkw:clear users``` or ```mkw:clear 1```")
+    if message_type not in ("bot", "users", "1"):
+        await ctx.send("clear command usage: ```mkw:clear bot``` or ```mkw:clear users``` or ```mkw:clear 1```")
         return
-    users = args and args[0] == "users"
-    _1p = args and args[0] == "1"
-    if users:
+    if message_type == "users":
         if ctx.channel.type == discord.ChannelType.private:
             await ctx.send("I can't remove other messages than mine in a Private Message channel.")
             return
         clean_message = await ctx.send(
             "I will remove the " + str(limit) + " previous command requests users sent in this channel, it will take some time !")
-    elif _1p:
+    elif message_type == "1":
         clean_message = await ctx.send(
             "The " + str(limit) + " previous messages about one player joining then leaving a region will be removed, it will take some "
             "time !")
@@ -634,9 +657,9 @@ async def clear(ctx, *args):
     #     content="Cleaning done ! I have read " + str(read) + " messages and deleted " + str(found)
     #             + ".\nThis message will be removed in 5 minutes.", delete_after=300.0)
     try:
-        if users:
+        if message_type == "users":
             deleted = await ctx.channel.purge(check=is_request, limit=limit, before=clean_message)
-        elif _1p:
+        elif message_type == "1":
             deleted = await ctx.channel.purge(check=is_1p, limit=limit, before=clean_message)
         else:
             deleted = await ctx.channel.purge(check=is_bot, limit=limit, before=clean_message)
@@ -674,11 +697,11 @@ def v2_to_v3_json_conv():
                 print("JSON is already OK")
 
 
-@client.command()
+@bot.hybrid_command()
 async def less(ctx, delay="15"):
-    """"""
+    """Pick a time in minutes after which notifications about a single player are deleted."""
     private = ctx.channel.type == discord.ChannelType.private
-    if not private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+    if not private and not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
         return
@@ -715,11 +738,11 @@ async def less(ctx, delay="15"):
         " minutes.")
 
 
-@client.command()
+@bot.hybrid_command()
 async def more(ctx):
-    """"""
+    """Message about a single player waiting for a game won't be deleted anymore."""
     private = ctx.channel.type == discord.ChannelType.private
-    if not private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+    if not private and not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
         return
@@ -749,11 +772,11 @@ async def more(ctx):
     await ctx.send("From now on, notifications about a player joining then leaving a region won't be deleted.")
 
 
-@client.event
+@bot.event
 async def on_ready():
     # v2_to_v3_json_conv()
     global guilds_count
-    guilds_count = len(client.guilds)
+    guilds_count = len(bot.guilds)
 
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
@@ -762,7 +785,6 @@ async def on_ready():
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
 
-    print("on_ready() as been used, must be a reconnection to Discord, or maybe you rebooted/restarted the bot ?")
     #     notification_subscribers_dict = {}
     #
     # for recipient_id in notification_subscribers_dict:
@@ -779,10 +801,11 @@ async def on_ready():
     #         print("client.get_channel() and client.get_user() both returned None. RECIPIENT_ID: " + recipient_id)
 
     if not check.is_running():
+        await bot.tree.sync()
         check.start()
 
 
-@client.event
+@bot.event
 async def on_command_error(ctx, error):
     try:
         await ctx.send(f'Error. Try mkw:help ({error})')
@@ -790,4 +813,4 @@ async def on_command_error(ctx, error):
         print("Forbidden: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 
-client.run(TOKEN)
+bot.run(TOKEN)
