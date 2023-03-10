@@ -614,7 +614,7 @@ async def clear(ctx, message_type):
     if ctx.channel.type == discord.ChannelType.private:
         await ctx.send("You can't use this command in private channels.")
         return
-    elif not ctx.author.permissions_in(ctx.channel).manage_channels:
+    elif not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send("You have not the right to manage this channel.")
         return
     if message_type not in ("bot", "users", "1"):
@@ -699,7 +699,7 @@ def v2_to_v3_json_conv():
 async def less(ctx, delay="15"):
     """"""
     private = ctx.channel.type == discord.ChannelType.private
-    if not private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+    if not private and not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
         return
@@ -740,7 +740,7 @@ async def less(ctx, delay="15"):
 async def more(ctx):
     """"""
     private = ctx.channel.type == discord.ChannelType.private
-    if not private and not ctx.author.permissions_in(ctx.channel).manage_channels:
+    if not private and not ctx.channel.permissions_for(ctx.author).manage_channels:
         await ctx.send(
             "You have not the right to manage this channel.")
         return
