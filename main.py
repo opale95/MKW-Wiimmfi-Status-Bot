@@ -63,9 +63,9 @@ async def bot_message(ctx,  message):
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as new_file:
             json.dump({}, new_file)
     else:
+        sent_count = 0
+        error_count = 0
         for recipient_id in notification_subscribers_dict:
-            sent_count = 0
-            error_count = 0
             recipient = bot.get_user(int(recipient_id))
             if recipient is None:
                 recipient = bot.get_channel(int(recipient_id))
