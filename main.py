@@ -64,14 +64,17 @@ async def bot_message(ctx,  message):
             json.dump({}, new_file)
     else:
         for recipient_id in notification_subscribers_dict:
-            count = 0
+            sent_count = 0
+            error_count = 0
             recipient = bot.get_user(int(recipient_id))
             if recipient is None:
                 recipient = bot.get_channel(int(recipient_id))
             if recipient:
+                sent_count += 1
                 await recipient.send(message)
             else:
-                await ctx.send("Can't send message.")
+                error_count += 1
+        await ctx.send("Sent " + str(sent_count) + " messages. Couldn't reach " + str(error_count) + " recipients from their ID.")
     # else:
         # await ctx.send("Wrong token.")
 
