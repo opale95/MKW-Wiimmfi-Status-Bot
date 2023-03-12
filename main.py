@@ -74,7 +74,7 @@ async def bot_message(ctx,  message):
                 await recipient.send(message)
             else:
                 error_count += 1
-        await ctx.send("Sent " + str(sent_count) + " messages. Couldn't reach " + str(error_count) + " recipients from their ID.")
+        await ctx.send("Sent " + str(sent_count) + " " + str(error_count) + " recipients unreachable from their ID.")
     # else:
         # await ctx.send("Wrong token.")
 
@@ -210,7 +210,7 @@ async def status(ctx):
     # table = player_count_table.sort_values(by="Region & Mode")
     embed = discord.Embed(
         colour=discord.Colour.green(), title="Mario Kart Wii: Wiimmfi Online players",
-        timestamp=datetime.datetime.utcnow())
+        timestamp=datetime.datetime.now())
     # for row in table.itertuples():
     total = 0
     for region_id in player_count_table:
@@ -454,7 +454,7 @@ async def notify(region_id, notification_content, messages):
         colour = discord.Colour.red()
     else:
         colour = discord.Colour.green()
-    embed = discord.Embed(colour=colour, timestamp=datetime.datetime.utcnow())
+    embed = discord.Embed(colour=colour, timestamp=datetime.datetime.now())
     # embed.add_field(name=message_content + " ", value=region_desc.removeprefix("Players "))
     region_name = get_region_name(region_id)
     embed.add_field(name=notification_content + " ", value="in  " + region_name + " (region " + str(region_id) + ")")
