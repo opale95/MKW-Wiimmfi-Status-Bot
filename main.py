@@ -35,9 +35,6 @@ regions_list = None
 player_count_dict = {}
 
 intents = discord.Intents.default()
-intents.members = True
-intents.guilds = True
-intents.message_content = True
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 guilds_count = 0
@@ -499,6 +496,7 @@ async def notify(region_id, notification_content, messages):
                     channel_id = recipient.id
                 else:
                     channel_id = None
+                    print("ERROR: Couldn't get neither user or channel.")
             else:
                 dm_channel = recipient.dm_channel
                 if dm_channel:
@@ -517,6 +515,8 @@ async def notify(region_id, notification_content, messages):
                     to_delete.append(recipient_id)
                 except (discord.DiscordServerError, discord.Forbidden, discord.NotFound, discord.HTTPException)\
                         as error:
+                    print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
+                except (discord.Exception, discord.ClientException) as error:
                     print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
                 else:
                     messages.append(message_object)
@@ -677,7 +677,7 @@ async def clear(ctx, message_type):
         print("ERROR: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 
-def v2_to_v3_json_conv():
+def v3_to_v4_json_conv():
     """"""
     try:
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
@@ -685,19 +685,23 @@ def v2_to_v3_json_conv():
     except (FileNotFoundError, json.JSONDecodeError):
         print("No JSON to convert.")
     else:
-        try:
-            item = notification_subscribers_dict.popitem()
-        except KeyError:
-            print("JSON is empty. Nothing to convert.")
-        else:
-            if type(item[1]) == list:
-                for recipient in notification_subscribers_dict:
-                    notification_subscribers_dict[recipient] = {"regions": notification_subscribers_dict[recipient],
-                                                                "less": "0"}
-                with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                    json.dump(notification_subscribers_dict, notification_subscribers_json)
+        for recipient_id in notification_subscribers_dict:
+            recipient = bot.get_user(int(recipient_id))
+            if recipient is None:
+                recipient = bot.get_channel(int(recipient_id))
+                if recipient:
+                    notification_subscribers_dict[recipient_id]["type"]="channel"
+                else:
+                    notification_subscribers_dict[recipient_id]["type"]="user"
+                    print("ERROR: Couldn't get neither user or channel.")
             else:
-                print("JSON is already OK")
+                dm_channel = recipient.dm_channel
+                if dm_channel:
+                    notification_subscribers_dict[recipient_id]["type"]="user"
+                else:
+                    notification_subscribers_dict[recipient_id]["type"]="FAIL"
+        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
+            json.dump(notification_subscribers_dict, notification_subscribers_json)
 
 
 @bot.hybrid_command()
@@ -777,7 +781,7 @@ async def more(ctx):
 
 @bot.event
 async def on_ready():
-    # v2_to_v3_json_conv()
+    v3_to_v4_json_conv()
     global guilds_count
     guilds_count = len(bot.guilds)
 
