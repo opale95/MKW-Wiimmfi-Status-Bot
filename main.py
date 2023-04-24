@@ -501,7 +501,10 @@ async def notify(region_id, notification_content, messages):
                     channel_id = None
             elif recipient_type == "dm":
                 coro = bot.fetch_user(int(recipient_id))
-                recipient = await coro
+                try:
+                    recipient = await coro
+                except discord.Exception as error:
+                    print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
                 if recipient:
                     dm_channel = recipient.dm_channel
                     if dm_channel:
