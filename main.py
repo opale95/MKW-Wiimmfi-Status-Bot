@@ -301,7 +301,7 @@ async def subscribe(ctx, channel_type, region_id):
             else:
                 notification_subscribers_dict[subscriber_id]["regions"].append(region_id)
         else:
-            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": "0"}
+            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": "0", "type": channel_type}
 
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
             json.dump(notification_subscribers_dict, notification_subscribers_json)
@@ -346,25 +346,26 @@ async def unsubscribe(ctx, channel_type, region_id):
     else:
         subscriber_id = str(ctx.author.id)
 
-    if region_id == "all":
-        if notification_subscribers_dict.pop(subscriber_id, None):
-            await ctx.send(recipient + " will no longer receive any notification.")
-        else:
-            await ctx.send(recipient + " did not subscribe to any region notification.")
-            return
-    elif subscriber_id in notification_subscribers_dict:
-        try:
-            notification_subscribers_dict[subscriber_id]["regions"].remove(region_id)
-        except ValueError:
-            await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
-        else:
-            global regions_list
-            # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
-            region_name = get_region_name(region_id)
-            if not notification_subscribers_dict[subscriber_id]["regions"]:
-                del notification_subscribers_dict[subscriber_id]
-            await ctx.send(
-                recipient + " will no longer be notified for region " + region_id + " (" + region_name + ").")
+    if subscriber_id in notification_subscribers_dict and notification_subscribers_dict[subscriber_id]["type"] == channel_type:
+        if region_id == "all":
+            if notification_subscribers_dict.pop(subscriber_id, None):
+                await ctx.send(recipient + " will no longer receive any notification.")
+            else:
+                await ctx.send(recipient + " did not subscribe to any region notification.")
+                return
+        elif subscriber_id in notification_subscribers_dict:
+            try:
+                notification_subscribers_dict[subscriber_id]["regions"].remove(region_id)
+            except ValueError:
+                await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
+            else:
+                global regions_list
+                # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+                region_name = get_region_name(region_id)
+                if not notification_subscribers_dict[subscriber_id]["regions"]:
+                    del notification_subscribers_dict[subscriber_id]
+                await ctx.send(
+                    recipient + " will no longer be notified for region " + region_id + " (" + region_name + ").")
     else:
         await ctx.send(recipient + " did not subscribe to any region notification.")
         return
@@ -402,7 +403,7 @@ async def subscriptions(ctx, channel_type):
     else:
         subscriber_id = str(ctx.author.id)
 
-    if subscriber_id in notification_subscribers_dict:
+    if subscriber_id in notification_subscribers_dict and notification_subscribers_dict[subscriber_id]["type"] == channel_type:
         global regions_list
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=recipient + " subscribed to:")
@@ -489,18 +490,22 @@ async def notify(region_id, notification_content, messages):
     to_delete = []
     for recipient_id in notification_subscribers_dict:
         if str(region_id) in notification_subscribers_dict[recipient_id]["regions"]:
-            recipient = bot.get_user(int(recipient_id))
-            if recipient is None:
+            recipient_type = notification_subscribers_dict[recipient_id]["type"]
+            recipient = None
+            channel_id = None
+            if recipient_type == "channel":
                 recipient = bot.get_channel(int(recipient_id))
                 if recipient:
                     channel_id = recipient.id
                 else:
                     channel_id = None
-                    print("ERROR: Couldn't get neither user or channel.")
-            else:
-                dm_channel = recipient.dm_channel
-                if dm_channel:
-                    channel_id = recipient.dm_channel.id
+            elif recipient_type == "dm":
+                coro = bot.fetch_user(int(recipient_id))
+                recipient = await coro
+                if recipient:
+                    dm_channel = recipient.dm_channel
+                    if dm_channel:
+                        channel_id = recipient.dm_channel.id
                 else:
                     channel_id = None
             if recipient and channel_id not in messages_channel_id:
@@ -692,12 +697,12 @@ def v3_to_v4_json_conv():
                 if recipient:
                     notification_subscribers_dict[recipient_id]["type"]="channel"
                 else:
-                    notification_subscribers_dict[recipient_id]["type"]="user"
+                    notification_subscribers_dict[recipient_id]["type"]="dm"
                     print("ERROR: Couldn't get neither user or channel.")
             else:
                 dm_channel = recipient.dm_channel
                 if dm_channel:
-                    notification_subscribers_dict[recipient_id]["type"]="user"
+                    notification_subscribers_dict[recipient_id]["type"]="dm"
                 else:
                     notification_subscribers_dict[recipient_id]["type"]="FAIL"
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
