@@ -503,7 +503,7 @@ async def notify(region_id, notification_content, messages):
                 coro = bot.fetch_user(int(recipient_id))
                 try:
                     recipient = await coro
-                except discord.Exception as error:
+                except discord.DiscordException as error:
                     print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
                 if recipient:
                     dm_channel = recipient.dm_channel
@@ -521,10 +521,7 @@ async def notify(region_id, notification_content, messages):
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                     to_delete.append(recipient_id)
-                except (discord.DiscordServerError, discord.Forbidden, discord.NotFound, discord.HTTPException)\
-                        as error:
-                    print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
-                except (discord.Exception, discord.ClientException) as error:
+                except discord.DiscordException as error:
                     print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
                 else:
                     messages.append(message_object)
