@@ -83,38 +83,38 @@ bot.remove_command('help')
 async def help(ctx):
     """Returns an embedded list and details of commands, and some additional information."""
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.set_author(name='Help : list of commands available (You can substitute mkw: with /)')
-    embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions.',
+    embed.set_author(name='Help : list of commands available')
+    embed.add_field(name='/status', value='Shows how many players are online, and in which game regions.',
                     inline=False)
-    embed.add_field(name='mkw:region "MANY WORDS" or mkw:region WORD',
-                    value="Search regions ID's by giving one or several words\nExample: mkw:region \"Mario Kart "
-                          "Fusion\" or mkw:region fun", inline=False)
-    embed.add_field(name='mkw:sub dm REGION_ID or mkw:sub channel REGION_ID',
+    embed.add_field(name='/region "MANY WORDS" or /region WORD',
+                    value="Search regions ID's by giving one or several words\nExample: /region \"Mario Kart "
+                          "Fusion\" or /region fun", inline=False)
+    embed.add_field(name='/subscribe dm REGION_ID or /subscribe channel REGION_ID',
                     value='Subscribe yourself to receive DM or the current channel (if you own the Manage Channels '
-                          'rights) to be notified to regions events.\nExample: mkw:sub dm 870 or mkw:sub channel 870',
+                          'rights) to be notified to regions events.\nExample: /subscribe dm 870 or /subscribe channel 870',
                     inline=False)
-    embed.add_field(name='mkw:unsub dm REGION_ID|all or mkw:unsub channel REGION_ID|all',
+    embed.add_field(name='/unsubscribe dm REGION_ID|all or /unsubscribe channel REGION_ID|all',
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to '
                           'regions events notifications.\n '
-                          'Example: mkw:unsub dm all or mkw:unsub dm 870 or mkw:unsub channel all or mkw:unsub channel 870',
+                          'Example: /unsubscribe dm all or /unsubscribe dm 870 or /unsubscribe channel all or /unsubscribe channel 870',
                     inline=False)
-    embed.add_field(name='mkw:subs dm or mkw:subs channel', value='Returns the region list for which you or the current '
+    embed.add_field(name='/subscriptions dm or /subscriptions channel', value='Returns the region list for which you or the current '
                                                                'channel (if you own the Manage Channels rights) are '
                                                                'subscribed to.\n '
                                                                'Also shows after how many minutes "Someone joined a '
                                                                'room then left" messages are deleted."', inline=False)
-    embed.add_field(name='mkw:clear bot or mkw:clear users or mkw:clear 1',
+    embed.add_field(name='/clear bot or /clear users or /clear 1',
                     value='Removes all the bot messages in the channel or the users command requests (the bot needs '
                           'Manage Messages permissions to delete users requests) or messages about someone who joined '
                           'then left.', inline=False)
-    embed.add_field(name='mkw:less or mkw:less MINUTES', value='Messages about someone who joined then left are '
+    embed.add_field(name='/less or /less MINUTES', value='Messages about someone who joined then left are '
                                                                'deleted after the number you put in place of MINUTES,'
                                                                ' or 15 minutes by default.', inline=False)
-    embed.add_field(name='mkw:more', value='Messages about someone who joined then left are no longer automatically '
+    embed.add_field(name='/more', value='Messages about someone who joined then left are no longer automatically '
                                            'removed after some minutes.', inline=False)
-    embed.add_field(name='mkw:invite', value='Returns a link to invite the bot in your server.', inline=False)
-    embed.add_field(name='mkw:help', value='Returns this help list.', inline=False)
-    embed.add_field(name='mkw:ping', value='Returns bot response time in milliseconds', inline=False)
+    embed.add_field(name='/invite', value='Returns a link to invite the bot in your server.', inline=False)
+    embed.add_field(name='/help', value='Returns this help list.', inline=False)
+    embed.add_field(name='/ping', value='Returns bot response time in milliseconds', inline=False)
     embed.add_field(name="Website the data is from:", value=" https://wiimmfi.de/stat?m=88", inline=False)
     embed.add_field(name="Want to report a bug, suggest a feature, or want to read/get the source code ?",
                     value="https://github.com/opale95/MKW-Wiimmfi-Status-Bot", inline=False)
@@ -311,8 +311,8 @@ async def subscribe(ctx, channel_type, region_id):
 
     else:
         await ctx.send("The region ID " + str(
-            region_id) + " does not exist. You can search regions IDs with ```mkw:region \"words to search\"``` or "
-                         "```mkw:region word_to_search```")
+            region_id) + " does not exist. You can search regions IDs with ```/region \"words to search\"``` or "
+                         "```/region word_to_search```")
 
 
 @bot.hybrid_command(name='unsubscribe', aliases=['unsub'])
@@ -628,7 +628,7 @@ async def clear(ctx, message_type):
         await ctx.send("You have not the right to manage this channel.")
         return
     if message_type not in ("bot", "users", "1"):
-        await ctx.send("clear command usage: ```mkw:clear bot``` or ```mkw:clear users``` or ```mkw:clear 1```")
+        await ctx.send("clear command usage: ```/clear bot``` or ```/clear users``` or ```/clear 1```")
         return
     if message_type == "users":
         if ctx.channel.type == discord.ChannelType.private:
@@ -719,7 +719,7 @@ async def less(ctx, delay="15"):
         return
     if not delay.isdigit():
         await ctx.send(
-            "less command usage: ```mkw:less``` or ```mkw:less DELAY``` (replace DELAY by the number of minutes you "
+            "less command usage: ```/less``` or ```/less DELAY``` (replace DELAY by the number of minutes you "
             "want the messages to be deleted after.")
         return
     try:
@@ -820,7 +820,7 @@ async def on_ready():
 @bot.event
 async def on_command_error(ctx, error):
     try:
-        await ctx.send(f'Error. Try mkw:help ({error})')
+        await ctx.send(f'Error. Try /help ({error})')
     except discord.Forbidden as error:
         print("Forbidden: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
