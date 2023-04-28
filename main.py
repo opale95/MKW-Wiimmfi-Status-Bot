@@ -682,33 +682,6 @@ async def clear(ctx, message_type):
         print("ERROR: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 
-def v3_to_v4_json_conv():
-    """"""
-    try:
-        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-            notification_subscribers_dict = json.load(notification_subscribers_json)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("No JSON to convert.")
-    else:
-        for recipient_id in notification_subscribers_dict:
-            recipient = bot.get_user(int(recipient_id))
-            if recipient is None:
-                recipient = bot.get_channel(int(recipient_id))
-                if recipient:
-                    notification_subscribers_dict[recipient_id]["type"]="channel"
-                else:
-                    notification_subscribers_dict[recipient_id]["type"]="dm"
-                    print("ERROR: Couldn't get neither user or channel.")
-            else:
-                dm_channel = recipient.dm_channel
-                if dm_channel:
-                    notification_subscribers_dict[recipient_id]["type"]="dm"
-                else:
-                    notification_subscribers_dict[recipient_id]["type"]="FAIL"
-        with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-            json.dump(notification_subscribers_dict, notification_subscribers_json)
-
-
 @bot.hybrid_command()
 async def less(ctx, delay="15"):
     """Pick a time in minutes after which notifications about a single player are deleted."""
@@ -786,7 +759,6 @@ async def more(ctx):
 
 @bot.event
 async def on_ready():
-    v3_to_v4_json_conv()
     global guilds_count
     guilds_count = len(bot.guilds)
 
