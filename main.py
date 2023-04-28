@@ -35,9 +35,6 @@ regions_list = None
 player_count_dict = {}
 
 intents = discord.Intents.default()
-intents.members = True
-intents.guilds = True
-intents.message_content = True
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 guilds_count = 0
@@ -86,38 +83,38 @@ bot.remove_command('help')
 async def help(ctx):
     """Returns an embedded list and details of commands, and some additional information."""
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.set_author(name='Help : list of commands available (You can substitute mkw: with /)')
-    embed.add_field(name='mkw:status', value='Shows how many players are online, and in which game regions.',
+    embed.set_author(name='Help : list of commands available')
+    embed.add_field(name='/status', value='Shows how many players are online, and in which game regions.',
                     inline=False)
-    embed.add_field(name='mkw:region "MANY WORDS" or mkw:region WORD',
-                    value="Search regions ID's by giving one or several words\nExample: mkw:region \"Mario Kart "
-                          "Fusion\" or mkw:region fun", inline=False)
-    embed.add_field(name='mkw:sub dm REGION_ID or mkw:sub channel REGION_ID',
+    embed.add_field(name='/region "MANY WORDS" or /region WORD',
+                    value="Search regions ID's by giving one or several words\nExample: /region \"Mario Kart "
+                          "Fusion\" or /region fun", inline=False)
+    embed.add_field(name='/subscribe dm REGION_ID or /subscribe channel REGION_ID',
                     value='Subscribe yourself to receive DM or the current channel (if you own the Manage Channels '
-                          'rights) to be notified to regions events.\nExample: mkw:sub dm 870 or mkw:sub channel 870',
+                          'rights) to be notified to regions events.\nExample: /subscribe dm 870 or /subscribe channel 870',
                     inline=False)
-    embed.add_field(name='mkw:unsub dm REGION_ID|all or mkw:unsub channel REGION_ID|all',
+    embed.add_field(name='/unsubscribe dm REGION_ID|all or /unsubscribe channel REGION_ID|all',
                     value='Unsubcribe yourself or the current channel (if you own the Manage Channels rights) to '
                           'regions events notifications.\n '
-                          'Example: mkw:unsub dm all or mkw:unsub dm 870 or mkw:unsub channel all or mkw:unsub channel 870',
+                          'Example: /unsubscribe dm all or /unsubscribe dm 870 or /unsubscribe channel all or /unsubscribe channel 870',
                     inline=False)
-    embed.add_field(name='mkw:subs dm or mkw:subs channel', value='Returns the region list for which you or the current '
+    embed.add_field(name='/subscriptions dm or /subscriptions channel', value='Returns the region list for which you or the current '
                                                                'channel (if you own the Manage Channels rights) are '
                                                                'subscribed to.\n '
                                                                'Also shows after how many minutes "Someone joined a '
                                                                'room then left" messages are deleted."', inline=False)
-    embed.add_field(name='mkw:clear bot or mkw:clear users or mkw:clear 1',
+    embed.add_field(name='/clear bot or /clear users or /clear 1',
                     value='Removes all the bot messages in the channel or the users command requests (the bot needs '
                           'Manage Messages permissions to delete users requests) or messages about someone who joined '
                           'then left.', inline=False)
-    embed.add_field(name='mkw:less or mkw:less MINUTES', value='Messages about someone who joined then left are '
+    embed.add_field(name='/less or /less MINUTES', value='Messages about someone who joined then left are '
                                                                'deleted after the number you put in place of MINUTES,'
                                                                ' or 15 minutes by default.', inline=False)
-    embed.add_field(name='mkw:more', value='Messages about someone who joined then left are no longer automatically '
+    embed.add_field(name='/more', value='Messages about someone who joined then left are no longer automatically '
                                            'removed after some minutes.', inline=False)
-    embed.add_field(name='mkw:invite', value='Returns a link to invite the bot in your server.', inline=False)
-    embed.add_field(name='mkw:help', value='Returns this help list.', inline=False)
-    embed.add_field(name='mkw:ping', value='Returns bot response time in milliseconds', inline=False)
+    embed.add_field(name='/invite', value='Returns a link to invite the bot in your server.', inline=False)
+    embed.add_field(name='/help', value='Returns this help list.', inline=False)
+    embed.add_field(name='/ping', value='Returns bot response time in milliseconds', inline=False)
     embed.add_field(name="Website the data is from:", value=" https://wiimmfi.de/stat?m=88", inline=False)
     embed.add_field(name="Want to report a bug, suggest a feature, or want to read/get the source code ?",
                     value="https://github.com/opale95/MKW-Wiimmfi-Status-Bot", inline=False)
@@ -304,7 +301,7 @@ async def subscribe(ctx, channel_type, region_id):
             else:
                 notification_subscribers_dict[subscriber_id]["regions"].append(region_id)
         else:
-            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": "0"}
+            notification_subscribers_dict[subscriber_id] = {"regions": [region_id], "less": "0", "type": channel_type}
 
         with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
             json.dump(notification_subscribers_dict, notification_subscribers_json)
@@ -314,8 +311,8 @@ async def subscribe(ctx, channel_type, region_id):
 
     else:
         await ctx.send("The region ID " + str(
-            region_id) + " does not exist. You can search regions IDs with ```mkw:region \"words to search\"``` or "
-                         "```mkw:region word_to_search```")
+            region_id) + " does not exist. You can search regions IDs with ```/region \"words to search\"``` or "
+                         "```/region word_to_search```")
 
 
 @bot.hybrid_command(name='unsubscribe', aliases=['unsub'])
@@ -349,25 +346,26 @@ async def unsubscribe(ctx, channel_type, region_id):
     else:
         subscriber_id = str(ctx.author.id)
 
-    if region_id == "all":
-        if notification_subscribers_dict.pop(subscriber_id, None):
-            await ctx.send(recipient + " will no longer receive any notification.")
-        else:
-            await ctx.send(recipient + " did not subscribe to any region notification.")
-            return
-    elif subscriber_id in notification_subscribers_dict:
-        try:
-            notification_subscribers_dict[subscriber_id]["regions"].remove(region_id)
-        except ValueError:
-            await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
-        else:
-            global regions_list
-            # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
-            region_name = get_region_name(region_id)
-            if not notification_subscribers_dict[subscriber_id]["regions"]:
-                del notification_subscribers_dict[subscriber_id]
-            await ctx.send(
-                recipient + " will no longer be notified for region " + region_id + " (" + region_name + ").")
+    if subscriber_id in notification_subscribers_dict and notification_subscribers_dict[subscriber_id]["type"] == channel_type:
+        if region_id == "all":
+            if notification_subscribers_dict.pop(subscriber_id, None):
+                await ctx.send(recipient + " will no longer receive any notification.")
+            else:
+                await ctx.send(recipient + " did not subscribe to any region notification.")
+                return
+        elif subscriber_id in notification_subscribers_dict:
+            try:
+                notification_subscribers_dict[subscriber_id]["regions"].remove(region_id)
+            except ValueError:
+                await ctx.send(recipient + " did not subscribe to region " + region_id + " notifications.")
+            else:
+                global regions_list
+                # region_name = regions_list.loc[regions_list["ID"] == region_id]["Name"].values[0]
+                region_name = get_region_name(region_id)
+                if not notification_subscribers_dict[subscriber_id]["regions"]:
+                    del notification_subscribers_dict[subscriber_id]
+                await ctx.send(
+                    recipient + " will no longer be notified for region " + region_id + " (" + region_name + ").")
     else:
         await ctx.send(recipient + " did not subscribe to any region notification.")
         return
@@ -405,7 +403,7 @@ async def subscriptions(ctx, channel_type):
     else:
         subscriber_id = str(ctx.author.id)
 
-    if subscriber_id in notification_subscribers_dict:
+    if subscriber_id in notification_subscribers_dict and notification_subscribers_dict[subscriber_id]["type"] == channel_type:
         global regions_list
         embed = discord.Embed(colour=discord.Colour.green())
         embed.set_author(name=recipient + " subscribed to:")
@@ -492,17 +490,25 @@ async def notify(region_id, notification_content, messages):
     to_delete = []
     for recipient_id in notification_subscribers_dict:
         if str(region_id) in notification_subscribers_dict[recipient_id]["regions"]:
-            recipient = bot.get_user(int(recipient_id))
-            if recipient is None:
+            recipient_type = notification_subscribers_dict[recipient_id]["type"]
+            recipient = None
+            channel_id = None
+            if recipient_type == "channel":
                 recipient = bot.get_channel(int(recipient_id))
                 if recipient:
                     channel_id = recipient.id
                 else:
                     channel_id = None
-            else:
-                dm_channel = recipient.dm_channel
-                if dm_channel:
-                    channel_id = recipient.dm_channel.id
+            elif recipient_type == "dm":
+                coro = bot.fetch_user(int(recipient_id))
+                try:
+                    recipient = await coro
+                except discord.DiscordException as error:
+                    print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
+                if recipient:
+                    dm_channel = recipient.dm_channel
+                    if dm_channel:
+                        channel_id = recipient.dm_channel.id
                 else:
                     channel_id = None
             if recipient and channel_id not in messages_channel_id:
@@ -515,8 +521,7 @@ async def notify(region_id, notification_content, messages):
                 except discord.Forbidden as error:
                     print("Forbidden: ", error.text, "\nRECIPIENT: ", recipient_id)
                     to_delete.append(recipient_id)
-                except (discord.DiscordServerError, discord.Forbidden, discord.NotFound, discord.HTTPException)\
-                        as error:
+                except discord.DiscordException as error:
                     print("ERROR: ", error.text, "\nRECIPIENT: ", recipient_id)
                 else:
                     messages.append(message_object)
@@ -623,7 +628,7 @@ async def clear(ctx, message_type):
         await ctx.send("You have not the right to manage this channel.")
         return
     if message_type not in ("bot", "users", "1"):
-        await ctx.send("clear command usage: ```mkw:clear bot``` or ```mkw:clear users``` or ```mkw:clear 1```")
+        await ctx.send("clear command usage: ```/clear bot``` or ```/clear users``` or ```/clear 1```")
         return
     if message_type == "users":
         if ctx.channel.type == discord.ChannelType.private:
@@ -677,29 +682,6 @@ async def clear(ctx, message_type):
         print("ERROR: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
 
-def v2_to_v3_json_conv():
-    """"""
-    try:
-        with open(NOTIFICATION_SUBSCRIBERS_JSON, "r") as notification_subscribers_json:
-            notification_subscribers_dict = json.load(notification_subscribers_json)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("No JSON to convert.")
-    else:
-        try:
-            item = notification_subscribers_dict.popitem()
-        except KeyError:
-            print("JSON is empty. Nothing to convert.")
-        else:
-            if type(item[1]) == list:
-                for recipient in notification_subscribers_dict:
-                    notification_subscribers_dict[recipient] = {"regions": notification_subscribers_dict[recipient],
-                                                                "less": "0"}
-                with open(NOTIFICATION_SUBSCRIBERS_JSON, "w") as notification_subscribers_json:
-                    json.dump(notification_subscribers_dict, notification_subscribers_json)
-            else:
-                print("JSON is already OK")
-
-
 @bot.hybrid_command()
 async def less(ctx, delay="15"):
     """Pick a time in minutes after which notifications about a single player are deleted."""
@@ -710,7 +692,7 @@ async def less(ctx, delay="15"):
         return
     if not delay.isdigit():
         await ctx.send(
-            "less command usage: ```mkw:less``` or ```mkw:less DELAY``` (replace DELAY by the number of minutes you "
+            "less command usage: ```/less``` or ```/less DELAY``` (replace DELAY by the number of minutes you "
             "want the messages to be deleted after.")
         return
     try:
@@ -777,7 +759,6 @@ async def more(ctx):
 
 @bot.event
 async def on_ready():
-    # v2_to_v3_json_conv()
     global guilds_count
     guilds_count = len(bot.guilds)
 
@@ -811,7 +792,7 @@ async def on_ready():
 @bot.event
 async def on_command_error(ctx, error):
     try:
-        await ctx.send(f'Error. Try mkw:help ({error})')
+        await ctx.send(f'Error. Try /help ({error})')
     except discord.Forbidden as error:
         print("Forbidden: ", error.text, "\nCHANNEL_ID: ", ctx.channel.id)
 
