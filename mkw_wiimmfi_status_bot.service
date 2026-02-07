@@ -1,0 +1,15 @@
+[Unit]
+Description=MKW Wiimmfi Status Bot for Discord
+After=network.target
+
+[Service]
+ExecStart="$HOME/bin/MKW-Wiimmfi-Status-Bot/launch.sh"
+WorkingDirectory="$HOME/bin/MKW-Wiimmfi-Status-Bot"
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+
