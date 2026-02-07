@@ -6,5 +6,6 @@ timestamp() {
     done
 }
 
-python3 main.py  |& timestamp >> mkw_wsb.log
+source "venv/bin/activate"
+python main.py  |& timestamp >> mkw_wsb.log
 
